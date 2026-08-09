@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SurplusClaim AI — Unclaimed Foreclosure Surplus Recovery</title>
+<style>
+  :root {
+    --blue-900: #0b2a4a; --blue-800: #123c66; --blue-700: #1a4f85;
+    --blue-600: #2164a8; --blue-500: #2b7bd0; --blue-100: #e3eefb; --blue-50: #f2f7fd;
+    --ink: #152433; --muted: #5c7186; --line: #dbe6f1; --white: #fff;
+    --green: #1e9e6a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, Arial, sans-serif; color: var(--ink); background: var(--white); line-height: 1.6; }
+  a { color: var(--blue-600); text-decoration: none; }
+  nav { display: flex; align-items: center; gap: 22px; padding: 16px 40px; background: var(--white); border-bottom: 1px solid var(--line); position: sticky; top: 0; background: rgba(255,255,255,.96); z-index: 10; }
+  nav .logo { font-size: 20px; font-weight: 800; color: var(--blue-900); }
+  nav .logo span { color: var(--blue-500); }
+  nav a.link { font-size: 14px; font-weight: 600; color: var(--ink); }
+  nav a.link:hover { color: var(--blue-600); }
+  nav .cta { margin-left: auto; background: var(--blue-600); color: #fff !important; padding: 9px 18px; border-radius: 8px; font-weight: 700; font-size: 13.5px; }
+  nav .cta:hover { background: var(--blue-700); }
+  .hero { background: linear-gradient(135deg, var(--blue-900) 0%, var(--blue-700) 55%, var(--blue-500) 100%); color: #fff; padding: 74px 40px 84px; text-align: center; }
+  .hero h1 { font-size: 42px; font-weight: 800; max-width: 820px; margin: 0 auto 18px; line-height: 1.2; }
+  .hero h1 .hl { color: #9cc8f5; }
+  .hero p.sub { font-size: 18px; max-width: 680px; margin: 0 auto 30px; opacity: .92; }
+  .hero .cta-row { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .btn { display: inline-block; padding: 13px 28px; border-radius: 9px; font-weight: 700; font-size: 15px; }
+  .btn.primary { background: #fff; color: var(--blue-800); }
+  .btn.primary:hover { background: var(--blue-100); }
+  .btn.ghost { border: 2px solid rgba(255,255,255,.55); color: #fff; }
+  .btn.ghost:hover { background: rgba(255,255,255,.12); }
+  .hero .trust { margin-top: 34px; font-size: 13px; opacity: .8; }
+  .section { padding: 60px 40px; max-width: 1080px; margin: 0 auto; }
+  .section h2 { font-size: 28px; font-weight: 800; color: var(--blue-900); text-align: center; margin-bottom: 12px; }
+  .section .lead { text-align: center; color: var(--muted); max-width: 640px; margin: 0 auto 38px; }
+  /* search */
+  .search-box { background: var(--blue-50); border: 1px solid var(--line); border-radius: 14px; padding: 26px; max-width: 720px; margin: 0 auto; }
+  .search-box form { display: flex; gap: 10px; }
+  .search-box input { flex: 1; padding: 13px 16px; border: 1px solid var(--line); border-radius: 8px; font-size: 15px; }
+  .search-box button { background: var(--blue-600); color: #fff; border: 0; border-radius: 8px; padding: 0 24px; font-weight: 700; font-size: 15px; cursor: pointer; }
+  .search-box button:hover { background: var(--blue-700); }
+  #searchResults { margin-top: 20px; }
+  .result { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .result .amt { font-size: 22px; font-weight: 800; color: var(--green); }
+  .result .meta { font-size: 13.5px; color: var(--muted); }
+  .result .tag { background: var(--blue-100); color: var(--blue-700); font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; }
+  .notice { background: #fff8ec; border: 1px solid #f0d9a8; color: #7a5208; border-radius: 10px; padding: 12px 16px; font-size: 13.5px; margin-top: 14px; }
+  /* steps */
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 22px; margin-top: 10px; }
+  .step { background: var(--blue-50); border: 1px solid var(--line); border-radius: 14px; padding: 26px 22px; text-align: center; }
+  .step .n { width: 44px; height: 44px; border-radius: 50%; background: var(--blue-600); color: #fff; font-weight: 800; font-size: 19px; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; }
+  .step h3 { font-size: 17px; color: var(--blue-900); margin-bottom: 8px; }
+  .step p { font-size: 14px; color: var(--muted); }
+  /* trust */
+  .trust-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 18px; }
+  .trust-card { border: 1px solid var(--line); border-radius: 12px; padding: 22px; text-align: center; }
+  .trust-card .big { font-size: 30px; font-weight: 800; color: var(--blue-700); }
+  .trust-card p { font-size: 13.5px; color: var(--muted); margin-top: 6px; }
+  /* faq */
+  .faq-item { border: 1px solid var(--line); border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
+  .faq-item summary { padding: 16px 20px; font-weight: 700; font-size: 15px; cursor: pointer; color: var(--blue-900); list-style: none; display: flex; justify-content: space-between; align-items: center; }
+  .faq-item summary::after { content: '+'; font-size: 20px; color: var(--blue-500); }
+  .faq-item[open] summary::after { content: '−'; }
+  .faq-item .ans { padding: 0 20px 16px; font-size: 14.5px; color: var(--muted); }
+  footer { background: var(--blue-900); color: rgba(255,255,255,.85); padding: 34px 40px; text-align: center; font-size: 13.5px; }
+  footer a { color: #9cc8f5; }
+  @media (max-width: 700px) { .hero h1 { font-size: 30px; } .search-box form { flex-direction: column; } nav { padding: 14px 20px; flex-wrap: wrap; } }
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo">SurplusClaim <span>AI</span></div>
+  <a class="link" href="#how">How It Works</a>
+  <a class="link" href="#faq">FAQ</a>
+  <a class="link" href="partner.html">Partner With Us</a>
+  <a class="cta" href="#search">Check My Claim</a>
+</nav>
+
+<section class="hero">
+  <h1>Did you lose your home to foreclosure?<br><span class="hl">You may have unclaimed money waiting for you.</span></h1>
+  <p class="sub">After a foreclosure auction, any money left over after the mortgage and fees are paid — the "surplus" — legally belongs to the former homeowner. Millions of dollars go unclaimed every year. We find it, file the paperwork, and handle everything. You only pay if we recover funds.</p>
+  <div class="cta-row">
+    <a class="btn primary" href="#search">Search for My Surplus — Free</a>
+    <a class="btn ghost" href="#how">How It Works</a>
+  </div>
+  <div class="trust">No upfront fees · 30% contingency only on recovered funds · You approve everything before we file</div>
+</section>
+
+<section class="section" id="search">
+  <h2>Is there money waiting for you?</h2>
+  <p class="lead">Search by your name or former address. This is a free lookup — no sign-up required.</p>
+  <div class="search-box">
+    <form id="searchForm">
+      <input id="q" type="text" placeholder="e.g. Maria Santos, or 1421 Market St" minlength="3" required>
+      <button type="submit">Search</button>
+    </form>
+    <div id="searchResults"></div>
+    <div class="notice">The information shown is provided for demonstration and informational purposes only and is not legal advice. Surplus eligibility depends on state law and each case's facts.</div>
+  </div>
+</section>
+
+<section class="section" id="how">
+  <h2>How It Works</h2>
+  <p class="lead">A simple, transparent three-step process — and you're in control the whole way.</p>
+  <div class="steps">
+    <div class="step">
+      <div class="n">1</div>
+      <h3>We Find Your Surplus</h3>
+      <p>We scan foreclosure auction records in your state to identify any surplus funds owed to you after the sale.</p>
+    </div>
+    <div class="step">
+      <div class="n">2</div>
+      <h3>You Sign One Agreement</h3>
+      <p>Review and e-sign a plain-English engagement letter. No upfront fees — our fee is 30% of funds actually recovered, and only if you get paid.</p>
+    </div>
+    <div class="step">
+      <div class="n">3</div>
+      <h3>We File &amp; Track Payment</h3>
+      <p>We prepare the state-specific claim forms, file them with the court or county, and track your payment until it arrives.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="trust">
+  <h2>Why Homeowners Trust SurplusClaim AI</h2>
+  <p class="lead">We built our process around transparency, compliance, and a single rule: we only get paid when you do.</p>
+  <div class="trust-grid" id="trustGrid">
+    <div class="trust-card"><div class="big">$0</div><p>Upfront cost — ever. All fees are contingent on recovery.</p></div>
+    <div class="trust-card"><div class="big">30%</div><p>Flat contingency fee, disclosed in writing before you sign anything.</p></div>
+    <div class="trust-card"><div class="big">100%</div><p>You approve the claim and every document before it is filed.</p></div>
+    <div class="trust-card"><div class="big">1</div><p>E-signature — complete your engagement online in minutes.</p></div>
+  </div>
+</section>
+
+<section class="section" id="faq">
+  <h2>Frequently Asked Questions</h2>
+  <p class="lead">Straight answers to the questions we hear most.</p>
+
+  <div class="faq-item"><details>
+    <summary>What exactly is a foreclosure surplus?</summary>
+    <div class="ans">When a home sells at a foreclosure auction for more than the amount owed on the mortgage plus costs and fees, the difference is the "surplus." State law says that leftover money belongs to the former homeowner — but most people never know it exists, and it often goes unclaimed.</div>
+  </details></div>
+  <div class="faq-item"><details>
+    <summary>How much does this cost me?</summary>
+    <div class="ans">Nothing upfront. Our fee is 30% of the funds we recover on your behalf — and only if money is actually recovered. If we don't recover anything, you owe us nothing.</div>
+  </details></div>
+  <div class="faq-item"><details>
+    <summary>How long does it take?</summary>
+    <div class="ans">Timelines vary by state and by whether the surplus is held by the court or the county. Many claims can be filed within a few weeks of signing; payment timing depends on the processing office. We track your claim through every step and keep you updated.</div>
+  </details></div>
+  <div class="faq-item"><details>
+    <summary>Is this legal?</summary>
+    <div class="ans">Yes. Unclaimed surplus funds are legally the property of the former homeowner, and every state provides a process to claim them. We follow each state's rules and generate state-specific claim forms — and we encourage you to review anything with a lawyer of your choosing before signing.</div>
+  </details></div>
+  <div class="faq-item"><details>
+    <summary>What if I already filed a claim myself?</summary>
+    <div class="ans">If you've already filed your own claim, you don't need us — congratulations. If your claim is still pending or you're not sure, our team can help you understand where things stand.</div>
+  </details></div>
+</section>
+
+<footer>
+  <p>SurplusClaim AI · demo site for internal review · <a href="partner.html">Partner Portal</a></p>
+  <p style="margin-top:8px; opacity:.7;">Not legal advice. Nothing on this page creates an attorney-client relationship.</p>
+</footer>
+
+<script>
+const form = document.getElementById('searchForm');
+const out = document.getElementById('searchResults');
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const q = document.getElementById('q').value.trim();
+  out.innerHTML = '<p style="color:#5c7186;">Searching…</p>';
+  try {
+    const r = await fetch('/api/search?q=' + encodeURIComponent(q));
+    const d = await r.json();
+    if (!r.ok) { out.innerHTML = `<div class="notice">${d.error || 'Search failed.'}</div>`; return; }
+    if (!d.count) { out.innerHTML = '<div class="notice">No matching surplus records found in the demo database. Try a different name or address.</div>'; return; }
+    out.innerHTML = '<h3 style="margin-bottom:12px; font-size:16px;">' + d.count + ' matching record(s)</h3>' + d.results.map(x => `
+      <div class="result">
+        <div>
+          <div><strong>${x.first_name || ''} ${x.last_name || ''}</strong> <span class="tag">${x.state}</span></div>
+          <div class="meta">${x.address}, ${x.city} ${x.zip_code || ''} · Auctioned ${x.auction_date || '—'}</div>
+        </div>
+        <div class="amt">${Number(x.surplus_amount).toLocaleString('en-US', {style:'currency', currency:'USD', maximumFractionDigits:0})}</div>
+      </div>`).join('');
+  } catch (err) {
+    out.innerHTML = `<div class="notice">Search unavailable right now — please try again shortly.</div>`;
+  }
+});
+</script>
+</body>
+</html>

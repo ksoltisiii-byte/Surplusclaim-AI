@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SurplusClaim AI — Referral Partner Portal</title>
+<style>
+  :root {
+    --blue-900: #0b2a4a; --blue-800: #123c66; --blue-700: #1a4f85;
+    --blue-600: #2164a8; --blue-500: #2b7bd0; --blue-100: #e3eefb; --blue-50: #f2f7fd;
+    --ink: #152433; --muted: #5c7186; --line: #dbe6f1; --white: #fff; --green: #1e9e6a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, Arial, sans-serif; color: var(--ink); background: #eef3f9; line-height: 1.6; }
+  nav { display: flex; align-items: center; gap: 22px; padding: 16px 40px; background: var(--white); border-bottom: 1px solid var(--line); }
+  nav .logo { font-size: 20px; font-weight: 800; color: var(--blue-900); }
+  nav .logo span { color: var(--blue-500); }
+  nav a.link { font-size: 14px; font-weight: 600; color: var(--ink); }
+  nav .cta { margin-left: auto; background: var(--blue-600); color: #fff !important; padding: 9px 18px; border-radius: 8px; font-weight: 700; font-size: 13.5px; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 40px 24px 60px; }
+  .hero { text-align: center; margin-bottom: 36px; }
+  .hero h1 { font-size: 34px; font-weight: 800; color: var(--blue-900); }
+  .hero p { color: var(--muted); max-width: 640px; margin: 10px auto 0; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 16px; margin-bottom: 36px; }
+  .stat { background: var(--white); border: 1px solid var(--line); border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 1px 4px rgba(16,42,67,.06); }
+  .stat .v { font-size: 26px; font-weight: 800; color: var(--blue-700); }
+  .stat .l { font-size: 12.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; font-weight: 600; margin-top: 4px; }
+  .cols { display: grid; grid-template-columns: 1.1fr .9fr; gap: 22px; }
+  .card { background: var(--white); border: 1px solid var(--line); border-radius: 14px; padding: 26px; box-shadow: 0 1px 4px rgba(16,42,67,.06); }
+  .card h2 { font-size: 17px; color: var(--blue-900); margin-bottom: 6px; }
+  .card .sub { font-size: 13.5px; color: var(--muted); margin-bottom: 18px; }
+  label { display: block; font-size: 13px; font-weight: 700; color: var(--blue-800); margin: 14px 0 5px; }
+  input, select { width: 100%; padding: 11px 13px; border: 1px solid var(--line); border-radius: 8px; font-size: 14.5px; background: #fbfdff; }
+  input:focus, select:focus { outline: 2px solid var(--blue-100); border-color: var(--blue-500); }
+  .btn { margin-top: 20px; width: 100%; background: var(--blue-600); color: #fff; border: 0; border-radius: 9px; padding: 13px; font-size: 15px; font-weight: 700; cursor: pointer; }
+  .btn:hover { background: var(--blue-700); }
+  .btn:disabled { opacity: .6; cursor: wait; }
+  #formMsg { margin-top: 12px; font-size: 14px; font-weight: 600; }
+  .ok { color: var(--green); }
+  .err { color: #c0392b; }
+  .perks li { font-size: 14px; color: var(--muted); margin: 9px 0 9px 18px; }
+  .perks li strong { color: var(--ink); }
+  .notice { background: #fff8ec; border: 1px solid #f0d9a8; color: #7a5208; border-radius: 10px; padding: 12px 16px; font-size: 13px; margin-top: 18px; }
+  @media (max-width: 820px) { .cols { grid-template-columns: 1fr; } nav { padding: 14px 20px; flex-wrap: wrap; } }
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo">SurplusClaim <span>AI</span></div>
+  <a class="link" href="/">Home</a>
+  <a class="cta" href="/">Public Site</a>
+</nav>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>Referral Partner Portal</h1>
+    <p>Real estate agents, attorneys, financial counselors and community organizations: refer homeowners who may have unclaimed foreclosure surplus — every recovered claim helps your clients and your community.</p>
+  </div>
+
+  <div class="stats" id="stats">
+    <div class="stat"><div class="v">—</div><div class="l">Surplus Found</div></div>
+    <div class="stat"><div class="v">—</div><div class="l">Properties Tracked</div></div>
+    <div class="stat"><div class="v">—</div><div class="l">Recovered</div></div>
+    <div class="stat"><div class="v">—</div><div class="l">Partner Registrations</div></div>
+    <div class="stat"><div class="v">—</div><div class="l">Referrals Received</div></div>
+  </div>
+
+  <div class="cols">
+    <div class="card">
+      <h2>Register as a Partner</h2>
+      <p class="sub">Join the network — it takes less than a minute and there's no cost to you or the homeowner.</p>
+      <form id="partnerForm">
+        <label for="name">Full name / organization</label>
+        <input id="name" type="text" required placeholder="e.g. Jane Smith, Realty Group">
+        <label for="email">Email</label>
+        <input id="email" type="email" required placeholder="you@example.com">
+        <label for="phone">Phone (optional)</label>
+        <input id="phone" type="tel" placeholder="(555) 123-4567">
+        <label for="type">Partner type</label>
+        <select id="type">
+          <option value="real-estate">Real estate agent / broker</option>
+          <option value="attorney">Attorney / legal</option>
+          <option value="counselor">Housing counselor / non-profit</option>
+          <option value="referral">Individual / other referral</option>
+        </select>
+        <button class="btn" id="submitBtn" type="submit">Register as Partner</button>
+        <div id="formMsg"></div>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Why partner with us?</h2>
+      <ul class="perks">
+        <li><strong>Help your clients recover money</strong> they don't even know they're owed — with zero cost or risk to them.</li>
+        <li><strong>Free surplus checks</strong> on your past clients — we run the records lookup at no charge.</li>
+        <li><strong>Transparent process:</strong> homeowners approve every document before anything is filed.</li>
+        <li><strong>Simple referral flow:</strong> send us a name and address; we handle the rest and keep you in the loop.</li>
+        <li><strong>No upfront fees, ever</strong> — our fee is a disclosed contingency on funds actually recovered.</li>
+      </ul>
+      <div class="notice">Partner registration is recorded for demo purposes. This demo site does not yet send confirmation emails or process real referrals.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+async function loadStats() {
+  try {
+    const r = await fetch('/api/stats');
+    const d = await r.json();
+    const usd = (n) => Number(n || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+    document.querySelector('#stats .stat:nth-child(1) .v').textContent = usd(d.surplus_found);
+    document.querySelector('#stats .stat:nth-child(2) .v').textContent = d.properties;
+    document.querySelector('#stats .stat:nth-child(3) .v').textContent = usd(d.recovered);
+    document.querySelector('#stats .stat:nth-child(4) .v').textContent = d.partners;
+    document.querySelector('#stats .stat:nth-child(5) .v').textContent = d.referrals;
+  } catch (err) { /* stats stay as — */ }
+}
+
+const form = document.getElementById('partnerForm');
+const msg = document.getElementById('formMsg');
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.textContent = 'Submitting…';
+  msg.className = ''; msg.textContent = '';
+  try {
+    const r = await fetch('/api/partners', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: document.getElementById('name').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        partner_type: document.getElementById('type').value
+      })
+    });
+    const d = await r.json();
+    if (!r.ok) { msg.className = 'err'; msg.textContent = d.error || 'Something went wrong.'; }
+    else {
+      msg.className = 'ok'; msg.textContent = d.message;
+      form.reset(); loadStats();
+    }
+  } catch (err) {
+    msg.className = 'err'; msg.textContent = 'Network error — please try again.';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Register as Partner';
+  }
+});
+
+loadStats();
+setInterval(loadStats, 30000);
+</script>
+</body>
+</html>

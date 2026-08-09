@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SurplusClaim AI — Operations Dashboard</title>
+<style>
+  :root {
+    --blue-900: #0b2a4a; --blue-800: #123c66; --blue-700: #1a4f85;
+    --blue-600: #2164a8; --blue-500: #2b7bd0; --blue-100: #e3eefb; --blue-50: #f2f7fd;
+    --ink: #152433; --muted: #5c7186; --line: #dbe6f1;
+    --green: #1e9e6a; --amber: #d97706; --red: #d64545; --white: #fff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, Arial, sans-serif; background: #eef3f9; color: var(--ink); }
+  header {
+    background: linear-gradient(135deg, var(--blue-900), var(--blue-600));
+    color: #fff; padding: 18px 28px; display: flex; align-items: center; gap: 16px;
+    flex-wrap: wrap; box-shadow: 0 2px 10px rgba(11,42,74,.25);
+  }
+  header .logo { font-size: 22px; font-weight: 800; letter-spacing: .3px; }
+  header .logo span { color: #9cc8f5; }
+  header .sub { font-size: 12.5px; opacity: .85; }
+  header .right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  .badge { padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; background: rgba(255,255,255,.16); }
+  .badge.ok { background: #17b26a; color: #fff; }
+  .badge.warn { background: var(--amber); color: #fff; }
+  #lastUpdate { font-size: 12px; opacity: .85; }
+  main { max-width: 1280px; margin: 26px auto; padding: 0 22px; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; }
+  .kpi { background: var(--white); border: 1px solid var(--line); border-radius: 14px; padding: 18px; box-shadow: 0 1px 4px rgba(16,42,67,.06); }
+  .kpi .label { font-size: 12.5px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+  .kpi .value { font-size: 28px; font-weight: 800; margin-top: 6px; color: var(--blue-800); }
+  .kpi .value.green { color: var(--green); }
+  .kpi .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 22px; }
+  .card { background: var(--white); border: 1px solid var(--line); border-radius: 14px; padding: 20px; box-shadow: 0 1px 4px rgba(16,42,67,.06); }
+  .card h2 { font-size: 15px; font-weight: 700; color: var(--blue-900); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .card h2::before { content: ''; width: 4px; height: 16px; background: var(--blue-500); border-radius: 2px; display: inline-block; }
+  .card.wide { grid-column: 1 / -1; }
+  /* funnel */
+  .funnel-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .funnel-label { width: 110px; font-size: 13px; font-weight: 600; color: var(--muted); }
+  .funnel-track { flex: 1; background: var(--blue-50); border-radius: 8px; height: 34px; position: relative; overflow: hidden; }
+  .funnel-fill { height: 100%; border-radius: 8px; background: linear-gradient(90deg, var(--blue-500), var(--blue-700)); display: flex; align-items: center; justify-content: flex-end; padding-right: 10px; color: #fff; font-size: 13px; font-weight: 700; min-width: 34px; transition: width .6s ease; }
+  .funnel-count { width: 70px; font-size: 14px; font-weight: 700; color: var(--blue-800); text-align: right; }
+  /* state bars */
+  .bar-row { display: grid; grid-template-columns: 46px 1fr 90px; gap: 10px; align-items: center; margin-bottom: 10px; font-size: 13px; }
+  .bar-track { background: var(--blue-50); height: 22px; border-radius: 6px; overflow: hidden; }
+  .bar-fill { height: 100%; background: linear-gradient(90deg, var(--blue-600), var(--blue-500)); border-radius: 6px; }
+  .bar-val { text-align: right; color: var(--muted); font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th { text-align: left; padding: 9px 10px; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .4px; border-bottom: 2px solid var(--line); white-space: nowrap; }
+  td { padding: 10px; border-bottom: 1px solid var(--line); }
+  tr:hover td { background: var(--blue-50); }
+  .tag { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 700; }
+  .tag.high { background: #d9f2e6; color: #11694a; }
+  .tag.medium { background: #fdeeda; color: #9a5b06; }
+  .tag.low { background: #fde3e3; color: #a02c2c; }
+  .tag.state { background: var(--blue-100); color: var(--blue-700); }
+  .tag.paid { background: #d9f2e6; color: #11694a; }
+  .tag.pending { background: #fdeeda; color: #9a5b06; }
+  .tag.draft { background: #e8edf3; color: #5c7186; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .muted { color: var(--muted); }
+  .rev-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; }
+  .rev-item .r-label { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .4px; }
+  .rev-item .r-value { font-size: 21px; font-weight: 800; color: var(--blue-800); margin-top: 4px; }
+  .rev-item .r-value.green { color: var(--green); }
+  .empty { text-align: center; color: var(--muted); padding: 26px 0; font-size: 13.5px; }
+  footer { text-align: center; color: var(--muted); font-size: 12px; padding: 26px 0 34px; }
+  @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <div class="logo">SurplusClaim <span>AI</span></div>
+    <div class="sub">Operations Dashboard · Foreclosure Surplus Recovery</div>
+  </div>
+  <div class="right">
+    <span id="lastUpdate">—</span>
+    <span id="status" class="badge warn">connecting…</span>
+  </div>
+</header>
+
+<main>
+  <section class="kpis" id="kpis"></section>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Pipeline Funnel</h2>
+      <div id="funnel"></div>
+    </div>
+
+    <div class="card">
+      <h2>Surplus by State</h2>
+      <div id="states"></div>
+    </div>
+
+    <div class="card wide">
+      <h2>Revenue Projection &amp; Fees</h2>
+      <div class="rev-cols" id="revenue"></div>
+    </div>
+
+    <div class="card wide">
+      <h2>Top Leads</h2>
+      <div style="overflow-x:auto;"><table id="leadsTable"></table></div>
+    </div>
+
+    <div class="card wide">
+      <h2>Payment Tracker</h2>
+      <div style="overflow-x:auto;"><table id="payTable"></table></div>
+    </div>
+  </div>
+</main>
+
+<footer>SurplusClaim AI · demo mode · live data from data-pipeline/surplusclaim.db</footer>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const fmt = (n) => Number(n || 0).toLocaleString('en-US');
+const money = (n) => Number(n || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+
+async function get(path) {
+  const r = await fetch(path);
+  if (!r.ok) throw new Error(path + ' → ' + r.status);
+  return r.json();
+}
+
+function kpi(label, value, hint, cls) {
+  return `<div class="kpi"><div class="label">${label}</div><div class="value ${cls || ''}">${value}</div><div class="hint">${hint || ''}</div></div>`;
+}
+
+function renderSummary(s) {
+  $('kpis').innerHTML =
+    kpi('Surplus Identified', money(s.properties.surplus_total), `${s.properties.total} properties · avg ${money(s.properties.surplus_avg)}`) +
+    kpi('Engagements Signed', s.engagements.signed, `${s.engagements.total} total engagements`) +
+    kpi('Claims Filed', s.claims.filed, `${s.claims.total} total claims`) +
+    kpi('Recovered', money(s.claims.recovered_amount), `${s.claims.recovered} claims paid`) +
+    kpi('Projected Fees (30%)', money(s.projected_fee), 'if full pipeline converts') +
+    kpi('Fees Earned', money(s.fees_earned), `${s.payments.total} payments · ${money(s.payments.paid_amount)}`, 'green');
+}
+
+function renderFunnel(f) {
+  const max = Math.max(...f.stages.map(s => s.count), 1);
+  $('funnel').innerHTML = f.stages.map(s => `
+    <div class="funnel-row">
+      <div class="funnel-label">${s.stage}</div>
+      <div class="funnel-track"><div class="funnel-fill" style="width:${Math.round(s.count / max * 100)}%">${s.count > 0 ? s.count : ''}</div></div>
+      <div class="funnel-count">${s.count}</div>
+    </div>`).join('');
+}
+
+function renderStates(states) {
+  const max = Math.max(...states.map(s => s.surplus_total), 1);
+  $('states').innerHTML = states.length
+    ? states.map(s => `
+      <div class="bar-row">
+        <span class="tag state" style="text-align:center;">${s.state}</span>
+        <div class="bar-track"><div class="bar-fill" style="width:${Math.round(s.surplus_total / max * 100)}%"></div></div>
+        <div class="bar-val">${money(s.surplus_total)}</div>
+      </div>`).join('')
+    : '<div class="empty">No data yet</div>';
+}
+
+function renderRevenue(r) {
+  $('revenue').innerHTML =
+    rev('Total Surplus', money(r.surplus_total)) +
+    rev('Recovered', money(r.recovered_amount)) +
+    rev('Projected Fees', money(r.projected_fee)) +
+    rev('Fees Earned', money(r.fees_earned), 'green') +
+    rev('12-Month Projection', money(r.projection_12mo), 'green', `${r.model.pipeline_conversion_12mo * 100}% pipeline conversion model`);
+  function rev(label, value, cls, hint) {
+    return `<div class="rev-item"><div class="r-label">${label}</div><div class="r-value ${cls || ''}">${value}</div><div class="hint muted" style="font-size:11.5px">${hint || ''}</div></div>`;
+  }
+}
+
+function renderLeads(d) {
+  const rows = d.leads.map(l => `
+    <tr>
+      <td><strong>${l.first_name} ${l.last_name}</strong><br><span class="muted">${l.email || 'no email'}</span></td>
+      <td>${l.address}, ${l.city}<br><span class="muted">${l.county} County, ${l.state}</span></td>
+      <td class="num"><strong>${money(l.surplus_amount)}</strong></td>
+      <td><span class="tag state">${l.state}</span></td>
+      <td><span class="tag ${l.score_label}">${l.score} · ${l.score_label}</span></td>
+      <td><span class="tag draft">${l.status}</span></td>
+    </tr>`).join('');
+  $('leadsTable').innerHTML = `
+    <thead><tr><th>Owner</th><th>Property</th><th class="num">Surplus</th><th>State</th><th>Score</th><th>Status</th></tr></thead>
+    <tbody>${rows || '<tr><td colspan="6" class="empty">No leads yet</td></tr>'}</tbody>`;
+}
+
+function renderPayments(pays) {
+  const rows = pays.map(p => `
+    <tr>
+      <td>${p.claim_number || '—'}</td>
+      <td>${p.first_name} ${p.last_name}<br><span class="muted">${p.address}, ${p.state}</span></td>
+      <td class="num"><strong>${money(p.amount)}</strong></td>
+      <td>${p.payment_type}</td>
+      <td><span class="tag ${p.status === 'paid' ? 'paid' : 'pending'}">${p.status}</span></td>
+      <td class="num muted">${p.paid_at ? p.paid_at.slice(0, 10) : '—'}</td>
+    </tr>`).join('');
+  $('payTable').innerHTML = `
+    <thead><tr><th>Claim</th><th>Owner / Property</th><th class="num">Amount</th><th>Type</th><th>Status</th><th class="num">Paid</th></tr></thead>
+    <tbody>${rows || '<tr><td colspan="6" class="empty">No payments recorded yet</td></tr>'}</tbody>`;
+}
+
+async function refresh() {
+  try {
+    const [s, f, st, l, r, p] = await Promise.all([
+      get('/api/summary'), get('/api/funnel'), get('/api/states'),
+      get('/api/leads?limit=10'), get('/api/revenue'), get('/api/payments')
+    ]);
+    renderSummary(s); renderFunnel(f); renderStates(st);
+    renderRevenue(r); renderLeads(l); renderPayments(p);
+    $('status').className = 'badge ok';
+    $('status').textContent = 'live';
+    $('lastUpdate').textContent = 'updated ' + new Date().toLocaleTimeString();
+  } catch (err) {
+    $('status').className = 'badge warn';
+    $('status').textContent = 'offline';
+    $('lastUpdate').textContent = 'last update failed: ' + err.message;
+  }
+}
+
+refresh();
+setInterval(refresh, 30000);
+</script>
+</body>
+</html>
