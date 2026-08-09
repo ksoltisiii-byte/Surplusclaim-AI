@@ -1,7 +1,23 @@
 {
-  "database_path": "surplusclaim.db",
+  "mode": "demo",
+  "database_path": "data-pipeline/surplusclaim.db",
   "contingency_fee_percent": 30,
   "supported_states": ["CA", "FL", "TX"],
-  "outreach": {"daily_limit": 100, "require_verified_contact": true, "include_opt_out": true},
+  "email": {
+    "enabled": false,
+    "provider": "sendgrid",
+    "from_address": "claims@example.com",
+    "api_key_env": "SENDGRID_API_KEY",
+    "daily_limit": 100
+  },
+  "sms": {
+    "enabled": false,
+    "provider": "twilio",
+    "from_number": "",
+    "account_sid_env": "TWILIO_ACCOUNT_SID",
+    "auth_token_env": "TWILIO_AUTH_TOKEN",
+    "daily_limit": 100
+  },
+  "outreach": {"require_verified_contact": true, "include_opt_out": true},
   "scoring": {"surplus_cap": 100000, "recency_window_days": 730}
 }

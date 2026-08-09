@@ -5,7 +5,7 @@ from pathlib import Path
 from contextlib import contextmanager
 from typing import Iterator
 
-DEFAULT_DB = Path(__file__).resolve().parent.parent / "surplusclaim.db"
+DEFAULT_DB = Path(__file__).resolve().parent / "surplusclaim.db"
 SCHEMA = """
 PRAGMA foreign_keys = ON;
 CREATE TABLE IF NOT EXISTS properties (
@@ -72,6 +72,34 @@ class Database:
         finally: conn.close()
     def initialize(self) -> None:
         with self.connection() as conn: conn.executescript(SCHEMA)
+
+    def seed_demo_data(self) -> int:
+        """Create the schema and insert the canonical demo properties/owners.
+
+        Import is deferred to avoid coupling schema users to the scraper module.
+        Returns the number of properties accepted (safe to call repeatedly).
+        """
+        self.initialize()
+        try:
+            from .pipeline import DemoScraper
+        except ImportError:
+            from pipeline import DemoScraper
+        count = 0
+        with self.connection() as conn:
+            for record in DemoScraper().fetch():
+                conn.execute("""INSERT INTO properties(address,city,state,zip_code,county,parcel_id,auction_date,
+                    sale_price,mortgage_balance,surplus_amount,source)
+                    VALUES(?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(parcel_id) DO UPDATE SET
+                    surplus_amount=excluded.surplus_amount, updated_at=CURRENT_TIMESTAMP""",
+                    (record.address, record.city, record.state, record.zip_code, record.county,
+                     record.parcel_id, record.auction_date, record.sale_price, record.mortgage_balance,
+                     record.surplus_amount, "demo"))
+                pid = conn.execute("SELECT id FROM properties WHERE parcel_id=?", (record.parcel_id,)).fetchone()[0]
+                conn.execute("""INSERT OR IGNORE INTO owners(property_id,first_name,last_name,email,phone,verified)
+                    VALUES(?,?,?,?,?,1)""", (pid, record.owner_first_name, record.owner_last_name,
+                    record.owner_email, record.owner_phone))
+                count += 1
+        return count
     def execute(self, sql: str, params: tuple = ()) -> int:
         with self.connection() as conn: return conn.execute(sql, params).lastrowid
     def fetchall(self, sql: str, params: tuple = ()) -> list[dict]:
