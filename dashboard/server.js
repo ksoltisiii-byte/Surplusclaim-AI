@@ -83,22 +83,20 @@ app.get('/api/summary', (req, res) => {
   });
 });
 
-/** GET /api/funnel — pipeline stage counts */
+/** GET /api/funnel — pipeline stage counts (Leads → Contacted → Engaged → Filed → Recovered) */
 app.get('/api/funnel', (req, res) => {
-  const identified = Number(row('SELECT COUNT(*) c FROM properties').c) || 0;
+  const leads = Number(row('SELECT COUNT(*) c FROM properties').c) || 0;
   const contacted = Number(row(`SELECT COUNT(DISTINCT owner_id) c FROM outreach_log WHERE direction='outbound'`).c) || 0;
   const engaged = Number(row('SELECT COUNT(*) c FROM engagements').c) || 0;
-  const signed = Number(row(`SELECT COUNT(*) c FROM engagements WHERE status='signed'`).c) || 0;
   const filed = Number(row(`SELECT COUNT(*) c FROM claims WHERE status <> 'draft'`).c) || 0;
   const recovered = Number(row(`SELECT COUNT(*) c FROM claims WHERE recovered_amount > 0`).c) || 0;
 
   res.json({
     stages: [
-      { stage: 'Identified', key: 'identified', count: identified },
+      { stage: 'Leads', key: 'leads', count: leads },
       { stage: 'Contacted', key: 'contacted', count: contacted },
       { stage: 'Engaged', key: 'engaged', count: engaged },
-      { stage: 'Signed', key: 'signed', count: signed },
-      { stage: 'Claims Filed', key: 'filed', count: filed },
+      { stage: 'Filed', key: 'filed', count: filed },
       { stage: 'Recovered', key: 'recovered', count: recovered }
     ]
   });
