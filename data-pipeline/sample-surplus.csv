@@ -1,0 +1,3 @@
+address,city,state,zip,county,parcel_id,auction_date,sale_price,mortgage_balance,first_name,last_name,email,phone
+100 Main St,Orlando,FL,32801,Orange,FL-SAMPLE-001,2026-07-15,350000,270000,Jordan,Lee,jordan.lee@example.com,407-555-0100
+200 Oak Ave,Austin,TX,78701,Travis,TX-SAMPLE-002,2026-06-20,420000,300000,Taylor,Smith,taylor.smith@example.com,512-555-0101
