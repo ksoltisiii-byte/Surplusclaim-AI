@@ -68,7 +68,42 @@
   .rev-item .r-value { font-size: 21px; font-weight: 800; color: var(--blue-800); margin-top: 4px; }
   .rev-item .r-value.green { color: var(--green); }
   .empty { text-align: center; color: var(--muted); padding: 26px 0; font-size: 13.5px; }
+  /* tabs */
+  .tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+  .tab { border: 1px solid var(--line); background: var(--white); color: var(--muted); padding: 9px 20px; border-radius: 10px; font-weight: 700; font-size: 13.5px; cursor: pointer; }
+  .tab.active { background: var(--blue-700); border-color: var(--blue-700); color: #fff; }
+  /* outreach */
+  .note { background: #fff8e6; border: 1px solid #f3dfa0; color: #7a5b06; border-radius: 10px; padding: 12px 16px; font-size: 13px; margin-bottom: 18px; line-height: 1.55; }
+  .outreach-grid { display: grid; grid-template-columns: 420px 1fr; gap: 18px; align-items: start; }
+  .lead-item { padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; margin-bottom: 10px; cursor: pointer; transition: border-color .15s, box-shadow .15s; }
+  .lead-item:hover { border-color: var(--blue-500); }
+  .lead-item.selected { border-color: var(--blue-600); box-shadow: 0 0 0 2px rgba(43,123,208,.25); background: var(--blue-50); }
+  .lead-item .li-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .lead-item .li-name { font-weight: 700; font-size: 14px; }
+  .lead-item .li-sub { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+  .lead-item .li-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; gap: 8px; }
+  .tag.contacted { background: #d9f2e6; color: #11694a; }
+  .tag.not_contacted { background: #e8edf3; color: #5c7186; }
+  .tag.dry_run { background: #fdeeda; color: #9a5b06; }
+  .chip { display: inline-block; background: var(--blue-100); color: var(--blue-800); border-radius: 999px; padding: 4px 12px; font-size: 12.5px; font-weight: 600; margin-right: 8px; margin-bottom: 6px; }
+  .tpl-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0; }
+  .tpl-btn { border: 1px solid var(--line); background: var(--white); padding: 7px 14px; border-radius: 8px; font-size: 12.5px; font-weight: 700; color: var(--muted); cursor: pointer; }
+  .tpl-btn.active { background: var(--blue-700); border-color: var(--blue-700); color: #fff; }
+  .subject-box { width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; font-size: 13.5px; font-weight: 600; background: #fafcfe; color: var(--ink); }
+  .m-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 4px; }
+  .msg-box { width: 100%; min-height: 150px; border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; font: 13px/1.55 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; resize: vertical; background: #fafcfe; color: var(--ink); }
+  .copy-row { display: flex; gap: 10px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
+  .btn { border: none; border-radius: 9px; padding: 10px 18px; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+  .btn.primary { background: var(--blue-600); color: #fff; }
+  .btn.primary:hover { background: var(--blue-700); }
+  .btn.ghost { background: var(--white); border: 1px solid var(--line); color: var(--blue-800); }
+  .btn.ghost:hover { border-color: var(--blue-500); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .feedback { font-size: 12.5px; font-weight: 600; color: var(--green); }
+  .feedback.err { color: var(--red); }
+  .contact-note { font-size: 12px; color: var(--muted); margin-top: 10px; line-height: 1.5; }
   footer { text-align: center; color: var(--muted); font-size: 12px; padding: 26px 0 34px; }
+  @media (max-width: 1000px) { .outreach-grid { grid-template-columns: 1fr; } }
   @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
 </style>
 </head>
@@ -85,34 +120,60 @@
 </header>
 
 <main>
-  <section class="kpis" id="kpis"></section>
+  <nav class="tabs">
+    <button class="tab active" data-tab="overview">Overview</button>
+    <button class="tab" data-tab="outreach">Outreach</button>
+  </nav>
 
-  <div class="grid">
-    <div class="card">
-      <h2>Pipeline Funnel</h2>
-      <div id="funnel"></div>
-    </div>
+  <section id="view-overview">
+    <section class="kpis" id="kpis"></section>
 
-    <div class="card">
-      <h2>Surplus by State</h2>
-      <div id="states"></div>
-    </div>
+    <div class="grid">
+      <div class="card">
+        <h2>Pipeline Funnel</h2>
+        <div id="funnel"></div>
+      </div>
 
-    <div class="card wide">
-      <h2>Revenue Projection &amp; Fees</h2>
-      <div class="rev-cols" id="revenue"></div>
-    </div>
+      <div class="card">
+        <h2>Surplus by State</h2>
+        <div id="states"></div>
+      </div>
 
-    <div class="card wide">
-      <h2>Top Leads</h2>
-      <div style="overflow-x:auto;"><table id="leadsTable"></table></div>
-    </div>
+      <div class="card wide">
+        <h2>Revenue Projection &amp; Fees</h2>
+        <div class="rev-cols" id="revenue"></div>
+      </div>
 
-    <div class="card wide">
-      <h2>Payment Tracker</h2>
-      <div style="overflow-x:auto;"><table id="payTable"></table></div>
+      <div class="card wide">
+        <h2>Top Leads</h2>
+        <div style="overflow-x:auto;"><table id="leadsTable"></table></div>
+      </div>
+
+      <div class="card wide">
+        <h2>Payment Tracker</h2>
+        <div style="overflow-x:auto;"><table id="payTable"></table></div>
+      </div>
     </div>
-  </div>
+  </section>
+
+  <section id="view-outreach" hidden>
+    <div class="note" id="outreachNote">
+      <strong>Manual outreach — copy-and-paste only.</strong> These are the pre-written email/SMS
+      templates from the outreach engine with each lead’s name/address substituted in. Nothing is
+      sent automatically from this panel: copy the message, send it yourself from your own email or
+      SMS app, then click <strong>“Mark as contacted”</strong> so the funnel records it.
+    </div>
+    <div class="outreach-grid">
+      <div class="card">
+        <h2>Leads</h2>
+        <div id="outreachLeads"><div class="empty">Loading…</div></div>
+      </div>
+      <div class="card">
+        <h2>Compose Message</h2>
+        <div id="composePanel"><div class="empty">Select a lead to compose a message.</div></div>
+      </div>
+    </div>
+  </section>
 </main>
 
 <footer>SurplusClaim AI · demo mode · live data from data-pipeline/surplusclaim.db</footer>
@@ -205,6 +266,154 @@ function renderPayments(pays) {
     <thead><tr><th>Claim</th><th>Owner / Property</th><th class="num">Amount</th><th>Type</th><th>Status</th><th class="num">Paid</th></tr></thead>
     <tbody>${rows || '<tr><td colspan="6" class="empty">No payments recorded yet</td></tr>'}</tbody>`;
 }
+
+/* ------------------------------ tabs ------------------------------------- */
+
+const outreachState = { leads: [], templates: {}, selectedOwnerId: null, activeTemplate: 'initial' };
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  $('view-overview').hidden = name !== 'overview';
+  $('view-outreach').hidden = name !== 'outreach';
+  if (name === 'outreach' && !outreachState.leads.length) loadOutreach();
+}
+
+document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
+
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const TPL_LABEL = { initial: 'Initial', follow_up: 'Follow-up', final: 'Final', sms: 'SMS' };
+
+function contactTag(lead) {
+  const st = lead.contact_status;
+  if (st === 'not_contacted') return { cls: 'not_contacted', label: 'Not contacted' };
+  if (st === 'delivered' || st === 'sent') return { cls: 'contacted', label: 'Contacted' + (lead.last_sent_at ? ' · ' + String(lead.last_sent_at).slice(0, 10) : '') };
+  return { cls: 'dry_run', label: st };
+}
+
+function fillTemplate(tpl, lead) {
+  const rep = (s) => (s || '')
+    .replace(/\{first_name\}/g, lead.first_name || '')
+    .replace(/\{address\}/g, lead.address || '')
+    .replace(/\{state\}/g, lead.state || '');
+  return { channel: tpl.channel, subject: rep(tpl.subject), body: rep(tpl.body) };
+}
+
+function renderOutreachLeads() {
+  const el = $('outreachLeads');
+  if (!outreachState.leads.length) { el.innerHTML = '<div class="empty">No leads yet</div>'; return; }
+  el.innerHTML = outreachState.leads.map(l => {
+    const t = contactTag(l);
+    return `
+      <div class="lead-item ${l.owner_id === outreachState.selectedOwnerId ? 'selected' : ''}" data-owner="${l.owner_id}">
+        <div class="li-top">
+          <span class="li-name">${esc(l.first_name)} ${esc(l.last_name)}</span>
+          <span class="tag ${l.score_label}">${l.score} · ${l.score_label}</span>
+        </div>
+        <div class="li-sub">${esc(l.address)}, ${esc(l.city)}, ${esc(l.state)}</div>
+        <div class="li-bottom">
+          <span style="font-weight:700;color:var(--blue-800)">${money(l.surplus_amount)}</span>
+          <span class="tag ${t.cls}">${t.label}</span>
+        </div>
+      </div>`;
+  }).join('');
+  el.querySelectorAll('.lead-item').forEach(item => item.addEventListener('click', () => {
+    outreachState.selectedOwnerId = Number(item.dataset.owner);
+    renderOutreachLeads();
+    renderComposePanel();
+  }));
+}
+
+function renderComposePanel() {
+  const panel = $('composePanel');
+  const lead = outreachState.leads.find(l => l.owner_id === outreachState.selectedOwnerId);
+  if (!lead) { panel.innerHTML = '<div class="empty">Select a lead to compose a message.</div>'; return; }
+  const tpl = outreachState.templates[outreachState.activeTemplate] || {};
+  const rendered = fillTemplate(tpl, lead);
+  const isSms = tpl.channel === 'sms';
+  panel.innerHTML = `
+    <div>
+      <span class="chip">✉️ ${esc(lead.email || 'no email')}</span>
+      <span class="chip">📱 ${esc(lead.phone || 'no phone')}</span>
+      ${lead.opted_out ? '<span class="chip" style="background:#fde3e3;color:#a02c2c">Opted out</span>' : ''}
+    </div>
+    <div class="tpl-row">
+      ${Object.keys(TPL_LABEL).map(k => `<button class="tpl-btn ${outreachState.activeTemplate === k ? 'active' : ''}" data-tpl="${k}">${TPL_LABEL[k]}</button>`).join('')}
+    </div>
+    ${isSms ? '' : `
+      <div class="m-label">Subject</div>
+      <input type="text" class="subject-box" value="${esc(rendered.subject)}" readonly>`}
+    <div class="m-label" style="margin-top:10px">Message</div>
+    <textarea class="msg-box" readonly>${esc(rendered.body)}</textarea>
+    <div class="copy-row">
+      <button class="btn primary" id="copyBtn">Copy message</button>
+      <button class="btn ghost" id="markBtn" ${lead.opted_out ? 'disabled' : ''}>Mark as contacted</button>
+      <span id="outreachFeedback"></span>
+    </div>
+    <div class="contact-note">Copy-and-paste template — nothing is sent automatically. Send it from your
+      own email/SMS app, then click <strong>Mark as contacted</strong> to record the manual send in
+      outreach_log (status “sent”) so the funnel’s Contacted stage stays accurate.</div>`;
+  panel.querySelectorAll('.tpl-btn').forEach(b => b.addEventListener('click', () => {
+    outreachState.activeTemplate = b.dataset.tpl;
+    renderComposePanel();
+  }));
+  $('copyBtn').addEventListener('click', () => copyMessage(rendered, isSms));
+  $('markBtn').addEventListener('click', () => markContacted(lead));
+}
+
+function outreachFeedback(msg, isErr) {
+  const f = $('outreachFeedback');
+  if (!f) return;
+  f.className = isErr ? 'feedback err' : 'feedback';
+  f.textContent = msg;
+  setTimeout(() => { f.textContent = ''; }, 4000);
+}
+
+async function copyMessage(rendered, isSms) {
+  const text = isSms ? rendered.body : `Subject: ${rendered.subject}\n\n${rendered.body}`;
+  try {
+    await navigator.clipboard.writeText(text);
+    outreachFeedback('Copied to clipboard ✓');
+  } catch (_) {
+    const ta = document.querySelector('.msg-box');
+    ta.removeAttribute('readonly');
+    ta.select();
+    try { document.execCommand('copy'); outreachFeedback('Copied to clipboard ✓'); }
+    catch (e) { outreachFeedback('Copy failed — select the text and copy manually', true); }
+    ta.setAttribute('readonly', '');
+  }
+}
+
+async function markContacted(lead) {
+  try {
+    const r = await fetch('/api/outreach/contacted', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ owner_id: lead.owner_id, template: outreachState.activeTemplate })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || ('HTTP ' + r.status));
+    outreachFeedback(`Recorded as contacted (${d.channel} · ${d.template}) ✓`);
+    await Promise.all([loadOutreach(), refresh()]);
+  } catch (err) {
+    outreachFeedback(err.message, true);
+  }
+}
+
+async function loadOutreach() {
+  try {
+    const d = await get('/api/outreach');
+    outreachState.leads = d.leads;
+    outreachState.templates = d.templates;
+    if (!outreachState.leads.some(l => l.owner_id === outreachState.selectedOwnerId)) {
+      outreachState.selectedOwnerId = d.leads.length ? d.leads[0].owner_id : null;
+    }
+    renderOutreachLeads();
+    renderComposePanel();
+  } catch (err) {
+    $('outreachLeads').innerHTML = `<div class="empty">Failed to load leads: ${esc(err.message)}</div>`;
+  }
+}
+
+/* ------------------------------ refresh ---------------------------------- */
 
 async function refresh() {
   try {

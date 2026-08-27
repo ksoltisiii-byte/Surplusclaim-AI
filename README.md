@@ -35,7 +35,7 @@ data-pipeline/         Python pipeline (schema + demo properties/owners)
 ## API surface
 
 - `GET /api/health` — health check on every service
-- Dashboard: `/api/summary`, `/api/funnel`, `/api/states`, `/api/leads`, `/api/revenue`, `/api/payments`
+- Dashboard: `/api/summary`, `/api/funnel`, `/api/states`, `/api/leads`, `/api/revenue`, `/api/payments`, `/api/outreach`, `/api/outreach/preview?owner_id=&template=`, `POST /api/outreach/contacted`
 - Website: `/api/search?q=`, `/api/stats`, `POST /api/partners`
 - Intake: `/api/properties`, `/api/letter?owner_id=`, `POST /api/sign`
 
