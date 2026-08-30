@@ -6,13 +6,47 @@
 
 const path = require('node:path');
 const express = require('express');
-const { config, rows, row, scoreLead, scoreLabel } = require('../lib/db');
+const { config, rows, row, run, scoreLead, scoreLabel } = require('../lib/db');
 
 const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 const FEE = config.contingency_fee_percent || 30;
+
+/* ---------------------- outreach templates (copy of outreach/outreach.py TEMPLATES) -------- */
+
+const OUTREACH_TEMPLATES = {
+  initial: {
+    channel: 'email',
+    subject: 'Information about possible surplus funds',
+    body: 'Hello {first_name},\n\nOur records indicate there may be surplus foreclosure funds associated with {address} in {state}. We can explain the public-record process and answer questions; recovery is not guaranteed. There is no fee unless funds are recovered.\n\nIf you do not want further messages, reply STOP.'
+  },
+  follow_up: {
+    channel: 'email',
+    subject: 'Following up about surplus funds',
+    body: 'Hello {first_name},\n\nI’m following up regarding possible surplus funds connected to {address}. Please contact us only if you would like more information. There is no obligation and no fee unless funds are recovered. Reply STOP to opt out.'
+  },
+  final: {
+    channel: 'email',
+    subject: 'Last planned update about surplus funds',
+    body: 'Hello {first_name},\n\nThis is our last planned message about possible surplus funds related to {address}. If you would like information, you may contact us; otherwise no action is needed. Reply STOP to opt out.'
+  },
+  sms: {
+    channel: 'sms',
+    subject: '',
+    body: 'Hi {first_name}, possible surplus funds may be associated with {address}, {state}. No obligation and no fee unless recovered. Reply STOP to opt out.'
+  }
+};
+
+function renderTemplate(template, lead) {
+  const t = OUTREACH_TEMPLATES[template];
+  const fill = (s) => s
+    .replace(/\{first_name\}/g, lead.first_name || '')
+    .replace(/\{address\}/g, lead.address || '')
+    .replace(/\{state\}/g, lead.state || '');
+  return { channel: t.channel, subject: fill(t.subject), body: fill(t.body) };
+}
 
 /* ------------------------------- API ------------------------------------ */
 
@@ -127,6 +161,72 @@ app.get('/api/leads', (req, res) => {
     return { ...l, score, score_label: scoreLabel(score) };
   });
   res.json({ leads, limit });
+});
+
+/** GET /api/outreach — leads with contact status (from outreach_log) + templates.
+ *  Powering the manual "copy-ready message" panel (no auto-send). */
+app.get('/api/outreach', (req, res) => {
+  const leads = rows(`
+    SELECT p.id AS property_id, p.address, p.city, p.state, p.zip_code, p.county,
+           p.auction_date, p.surplus_amount, p.status,
+           o.id AS owner_id, o.first_name, o.last_name, o.email, o.phone,
+           o.verified, o.opted_out, o.mailing_address
+    FROM properties p
+    JOIN owners o ON o.property_id = p.id
+    WHERE p.surplus_amount > 0
+    ORDER BY p.surplus_amount DESC`).map((l) => {
+    const score = scoreLead(l);
+    const contact = row(
+      `SELECT channel, template, status, sent_at FROM outreach_log
+       WHERE owner_id = ? AND direction = 'outbound' ORDER BY id DESC LIMIT 1`, l.owner_id);
+    return {
+      ...l,
+      score, score_label: scoreLabel(score),
+      contact_status: contact ? contact.status : 'not_contacted',
+      last_channel: contact ? contact.channel : null,
+      last_template: contact ? contact.template : null,
+      last_sent_at: contact ? contact.sent_at : null
+    };
+  });
+  res.json({ leads, templates: OUTREACH_TEMPLATES });
+});
+
+/** GET /api/outreach/preview?owner_id=&template= — server-rendered message */
+app.get('/api/outreach/preview', (req, res) => {
+  const ownerId = parseInt(req.query.owner_id, 10);
+  const template = req.query.template;
+  if (!ownerId || !OUTREACH_TEMPLATES[template]) {
+    return res.status(400).json({ error: 'owner_id and template are required (initial|follow_up|final|sms)' });
+  }
+  const lead = row(`SELECT o.first_name, o.last_name, o.email, o.phone, p.address, p.state
+                    FROM owners o JOIN properties p ON p.id = o.property_id WHERE o.id = ?`, ownerId);
+  if (!lead) return res.status(404).json({ error: 'owner not found' });
+  res.json(renderTemplate(template, lead));
+});
+
+/** POST /api/outreach/contacted — record a manual send so the funnel tracks it.
+ *  Body: { owner_id, template, channel? } → writes outreach_log (status='sent'). */
+app.post('/api/outreach/contacted', (req, res) => {
+  const { owner_id, template, channel } = req.body || {};
+  const oid = parseInt(owner_id, 10);
+  if (!oid) return res.status(400).json({ error: 'owner_id is required' });
+  const owner = row('SELECT opted_out FROM owners WHERE id = ?', oid);
+  if (!owner) return res.status(404).json({ error: 'owner not found' });
+  if (owner.opted_out) {
+    return res.status(400).json({ error: 'owner has opted out — do not contact' });
+  }
+  const t = OUTREACH_TEMPLATES[template] || {};
+  const chan = String(channel || t.channel || 'email').toLowerCase();
+  const sentAt = new Date().toISOString();
+  const info = run(
+    `INSERT INTO outreach_log(owner_id, channel, direction, template, status, sent_at)
+     VALUES(?,?,?,?,?,?)`,
+    oid, chan, 'outbound', template || 'manual', 'sent', sentAt
+  );
+  res.status(201).json({
+    id: Number(info.lastInsertRowid), owner_id: oid, channel: chan,
+    template: template || 'manual', status: 'sent', sent_at: sentAt
+  });
 });
 
 /** GET /api/revenue — fee projection + payment tracking summary */
