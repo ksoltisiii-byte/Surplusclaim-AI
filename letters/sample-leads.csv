@@ -1,0 +1,4 @@
+uid,cause_nbr,account_nbr,sale_type,status,estimated_surplus,address,city,state,zip,county,parcel_id,auction_date,sale_price,mortgage_balance,first_name,last_name,email,phone
+TEST-1001,202612345,0142190000022,SALE,Scheduled for Auction,82500.00,4500 ELM ST,HOUSTON,TX,77009,Harris,HARRIS-0142190000022,2026-10-06,105000,22500,,,,
+TEST-1002,202698765,0350930450018,RESALE,Cancelled,0,1200 MAPLE AVE,HOUSTON,TX,77026,Harris,HARRIS-0350930450018,2026-10-06,50000,50000,,,,
+TEST-1003,202655544,0751900230006,SALE,Scheduled for Auction,31250.00,27 OAK ST #3,BAYTOWN,TX,77520,Harris,HARRIS-0751900230006,2026-10-06,41250,10000,,,,

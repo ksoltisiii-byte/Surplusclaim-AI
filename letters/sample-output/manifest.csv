@@ -1,0 +1,3 @@
+"uid","letter_file","mail_ready","address","city","state","zip","county","cause_nbr","estimated_surplus","status","auction_date","sale_type"
+"TEST-1001","letters/TEST-1001.html","false","4500 ELM ST","HOUSTON","TX","77009","Harris","202612345","82500.00","Scheduled for Auction","2026-10-06","SALE"
+"TEST-1003","letters/TEST-1003.html","false","27 OAK ST #3","BAYTOWN","TX","77520","Harris","202655544","31250.00","Scheduled for Auction","2026-10-06","SALE"

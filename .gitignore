@@ -32,3 +32,6 @@ logs/
 *.swp
 .idea/
 .vscode/
+
+# Generated letters (run the generator to recreate)
+letters/output/

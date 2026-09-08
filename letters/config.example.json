@@ -1,0 +1,11 @@
+{
+  "_comment": "Copy to letters/config.json and fill in REAL business details before any mailing. This example file is tracked for reference only — never mail letters rendered with placeholder values.",
+  "business_name": "SurplusClaim AI",
+  "business_address": "REPLACE WITH REAL MAILING ADDRESS",
+  "business_city": "REPLACE",
+  "business_state": "TX",
+  "business_zip": "REPLACE",
+  "business_phone": "REPLACE WITH REAL PHONE",
+  "business_website": "https://78050107b70674d03aeeaba952ce3cd4.ctonew.app",
+  "business_domain": "78050107b70674d03aeeaba952ce3cd4.ctonew.app"
+}
