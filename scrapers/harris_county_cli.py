@@ -34,6 +34,7 @@ def main() -> int:
     counties = None if args.all_counties else (tuple(args.counties) if args.counties else ("HARRIS COUNTY",))
     scraper = LGBSScraper(
         client=LGBSClient(timeout=args.timeout, delay=args.delay),
+        county=None if args.all_counties else "HARRIS COUNTY",
         counties=counties,
         max_pages=args.max_pages,
         page_size=args.page_size,
@@ -43,7 +44,8 @@ def main() -> int:
         leads = leads[: max(0, args.max_records)]
     count = write_csv(leads, Path(args.output))
     total = sum(lead.estimated_surplus or 0 for lead in leads)
-    print(f"Records pulled: {len(leads)}")
+    print(f"Counties discovered: {', '.join(scraper.available_counties) if scraper.available_counties else 'none returned'}")
+    print(f"Records pulled: {scraper.records_pulled}")
     print(f"Surplus candidates: {count}")
     print(f"Total estimated surplus: ${total:,.2f}")
     print(f"Wrote {count} rows to {args.output}")

@@ -119,7 +119,7 @@ def normalize_record(row: dict[str, Any]) -> SurplusLead | None:
         return None
     estimated = round(value - minimum_bid, 2)
     if not all((address, city, zipcode, auction_date, account)):
-        LOGGER.warning("Skipping incomplete LGBS row uid=%s", uid)
+        LOGGER.debug("Skipping incomplete LGBS row uid=%s", uid)
         return None
     return SurplusLead(
         uid=uid,
@@ -299,6 +299,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     counties = None if args.all_counties else (tuple(args.counties) if args.counties else ("HARRIS COUNTY",))
     scraper = LGBSScraper(
         client=LGBSClient(timeout=args.timeout, delay=args.delay),
+        county=None if args.all_counties else "HARRIS COUNTY",
         counties=counties, page_size=args.page_size, max_pages=args.max_pages,
         include_details=args.details,
     )
