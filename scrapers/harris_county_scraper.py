@@ -68,57 +68,39 @@ def _date(value: Any) -> str:
 
 
 def _record_from_api(row: dict[str, Any]) -> ForeclosureRecord | None:
-    """Normalize one LGBS property-sale JSON object.
+    """Normalize one LGBS TX property-sale JSON object.
 
-    LGBS exposes ``minimum_bid`` and assessed ``value`` rather than a confirmed
-    closing price.  We use minimum_bid as the conservative sale-price proxy,
-    falling back to value where minimum_bid is absent.  The resulting surplus
-    is explicitly a *candidate* amount and must be verified with Harris County
-    before outreach or claims.
+    LGBS exposes appraised ``value`` and ``minimum_bid``.  They map to the
+    existing sale_price/mortgage_balance fields so the shared surplus formula
+    remains ``value - minimum_bid``.  Non-positive candidates are omitted.
     """
-    county = str(row.get("county") or "").strip().upper()
+    county_raw = str(row.get("county") or "").strip().upper()
     state = str(row.get("prop_state") or row.get("state") or "").strip().upper()
-    if county not in {"HARRIS", "HARRIS COUNTY"} or state != "TX":
+    if state != "TX" or not county_raw:
         return None
-
+    county = " ".join(word.capitalize() for word in county_raw.split())
     address = " ".join(
-        part.strip() for part in (
-            row.get("prop_address_one"), row.get("prop_address_two")
-        ) if str(part or "").strip()
+        part.strip() for part in (row.get("prop_address_one"), row.get("prop_address_two"))
+        if str(part or "").strip()
     )
     city = str(row.get("prop_city") or "").strip()
     zipcode = str(row.get("prop_zipcode") or "").strip()
     auction_date = _date(row.get("sale_date_only") or row.get("sale_date"))
-    # A parcel/account number is more stable than the sale UID across runs.
     account = str(row.get("account_nbr") or "").strip()
     uid = str(row.get("uid") or "").strip()
-    parcel_id = f"HARRIS-{account or uid}" if (account or uid) else ""
-    sale_price = _number(row.get("minimum_bid"))
-    if sale_price is None:
-        sale_price = _number(row.get("value"))
-    required = (address, city, zipcode, auction_date, parcel_id, sale_price)
-    if not all(required):
+    parcel_id = f"{county_raw.replace(' ', '-')}-{account or uid}" if (account or uid) else ""
+    value = _number(row.get("value"))
+    minimum_bid = _number(row.get("minimum_bid"))
+    if value is None or minimum_bid is None or value <= minimum_bid:
+        return None
+    if not all((address, city, zipcode, auction_date, parcel_id)):
         LOGGER.warning("Skipping LGBS record with missing required fields: %s", row.get("uid"))
         return None
-    if sale_price <= 0:
-        return None
-    # Tax-sale records do not expose a mortgage balance.  A zero balance is a
-    # data-source convention, not a representation that no lien exists.
     return ForeclosureRecord(
-        address=address,
-        city=city,
-        state="TX",
-        zip_code=zipcode,
-        county="Harris",
-        parcel_id=parcel_id,
-        auction_date=auction_date,
-        sale_price=round(sale_price, 2),
-        mortgage_balance=0.0,
-        surplus_amount=round(sale_price, 2),
-        owner_first_name="",
-        owner_last_name="",
-        owner_email="",
-        owner_phone="",
+        address=address, city=city, state="TX", zip_code=zipcode, county=county,
+        parcel_id=parcel_id, auction_date=auction_date, sale_price=value,
+        mortgage_balance=minimum_bid, surplus_amount=round(value - minimum_bid, 2),
+        owner_first_name="", owner_last_name="", owner_email="", owner_phone="",
     )
 
 
