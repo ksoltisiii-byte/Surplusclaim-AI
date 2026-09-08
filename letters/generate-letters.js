@@ -158,31 +158,48 @@ Options:
 }
 
 /* ------------------------------------------------------------------ */
+// Owner-locked rule: business contact merge fields are CONFIG-DRIVEN.
+// If letters/config.json is missing or a field is empty/placeholder,
+// render that field BLANK and flag it — never substitute fake placeholders.
+const PLACEHOLDER_PATTERN = /REPLACE|YOUR_|TODO|XXX/i;
+const BUSINESS_FIELDS = ["business_name", "business_address", "business_city", "business_state", "business_zip", "business_phone", "business_website", "business_domain"];
+
 function loadBusinessConfig(configPath, strict) {
   let p = configPath;
+  let cfg = null;
   if (!fs.existsSync(p)) {
-    console.warn(`[warn] ${p} not found; falling back to ${CONFIG_EXAMPLE} (placeholders).`);
-    p = CONFIG_EXAMPLE;
+    console.warn(`[warn] ${p} not found — business merge fields will be BLANK and flagged in the manifest.`);
+  } else {
+    try {
+      cfg = JSON.parse(fs.readFileSync(p, "utf8"));
+    } catch (err) {
+      console.warn(`[warn] ${p} unreadable (${err.message}) — business merge fields will be BLANK and flagged in the manifest.`);
+    }
   }
-  const cfg = JSON.parse(fs.readFileSync(p, "utf8"));
-  const required = ["business_name", "business_address", "business_city", "business_state", "business_zip", "business_phone", "business_website", "business_domain"];
   const missing = [];
-  for (const key of required) {
-    const v = (cfg[key] || "").trim();
-    if (!v) { missing.push(key); continue; }
-    if (/REPLACE|YOUR_|TODO/i.test(v)) missing.push(key);
+  const values = {};
+  for (const key of BUSINESS_FIELDS) {
+    const raw = cfg ? (cfg[key] || "") : "";
+    const v = String(raw).trim();
+    if (!v || PLACEHOLDER_PATTERN.test(v)) {
+      missing.push(key);
+      values[key] = ""; // blank, never a fake placeholder
+    } else {
+      values[key] = v;
+    }
   }
   if (missing.length > 0) {
     if (strict) {
-      console.error(`[error] letters/config.json has placeholder/missing business fields: ${missing.join(", ")}\nFill real values before mailing (see letters/config.example.json).`);
+      console.error(`[error] Missing/placeholder business fields (blank in letters, flagged in manifest): ${missing.join(", ")}\nCreate letters/config.json with real values (see letters/config.example.json).`);
       process.exit(1);
     }
-    console.warn(`[warn] Business config not mail-ready (placeholder/missing: ${missing.join(", ")}).\nOutput will be stamped DEMO — NOT FOR MAILING. Use --strict to fail instead.`);
-    cfg._demo = true;
+    console.warn(`[warn] Business config not mail-ready — missing/placeholder: ${missing.join(", ")}.\nLetters will show BLANK for these fields and the manifest will flag mail_ready=false. Use --strict to fail instead.`);
+    values._demo = true;
   } else {
-    cfg._demo = false;
+    values._demo = false;
   }
-  return cfg;
+  values._missing = missing;
+  return values;
 }
 
 function loadCopy() {
@@ -309,8 +326,9 @@ function main() {
   const lettersDir = path.join(outDir, "letters");
   fs.mkdirSync(lettersDir, { recursive: true });
 
-  const manifest = [["uid", "letter_file", "mail_ready", "address", "city", "state", "zip", "county", "cause_nbr", "estimated_surplus", "status", "auction_date", "sale_type"]];
+  const manifest = [["uid", "letter_file", "mail_ready", "missing_business_fields", "address", "city", "state", "zip", "county", "cause_nbr", "estimated_surplus", "status", "auction_date", "sale_type"]];
   const mergedParts = [];
+  const missingFlag = cfg._missing.length > 0 ? cfg._missing.join(";") : "";
 
   for (const lead of leads) {
     const letter = renderLetter(lead, cfg, letterDate, copy, cfg._demo);
@@ -320,6 +338,7 @@ function main() {
     const rel = path.relative(outDir, fpath).split(path.sep).join("/");
     manifest.push([
       lead.uid, rel, cfg._demo ? "false" : "true",
+      missingFlag,
       lead.address, lead.city, lead.state, lead.zip, lead.county,
       lead.cause_nbr, lead.estimated_surplus, lead.status, lead.auction_date, lead.sale_type,
     ]);
@@ -344,7 +363,7 @@ function main() {
   console.log(`  per-lead HTML : ${path.join(lettersDir, "<uid>.html")}`);
   console.log(`  manifest CSV  : ${manifestPath}`);
   if (mergedPath) console.log(`  merged doc    : ${mergedPath}`);
-  console.log(`  mail_ready    : ${cfg._demo ? "FALSE (DEMO — business config has placeholders)" : "true"}`);
+  console.log(`  mail_ready    : ${cfg._demo ? `FALSE — missing/blank business fields: ${cfg._missing.join(", ")}` : "true"}`);
   console.log(`  surplus sum   : $${fmtMoney(leads.reduce((s, l) => s + Number(l.estimated_surplus), 0))} across ${leads.length} candidate(s)\n`);
 }
 
