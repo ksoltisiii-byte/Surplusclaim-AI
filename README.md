@@ -5,6 +5,7 @@ Fully automated foreclosure surplus recovery platform.
 - **Dashboard** (port 3000) — real-time KPI cards, pipeline funnel, state breakdown, top leads, revenue projection, payment tracker
 - **Public Website & Partner Portal** (port 4000) — landing page with claim search, referral partner registration with live stats
 - **Digital Intake & E-Sign** (port 5000) — homeowner form, engagement letter, HTML5 Canvas signature pad; auto-generates claims on signature
+- **Letters** (`letters/`) — mail-merge generator: renders the owner-approved letter copy per surplus lead from the LGBS scraper CSV (printed mail is our primary outreach channel)
 - **Data pipeline** (`data-pipeline/`) — Python: schema, lead scoring, demo data (SQLite)
 - **Config** — `config.json` (ports, fee %, email/SMS settings, claim engine endpoint)
 
