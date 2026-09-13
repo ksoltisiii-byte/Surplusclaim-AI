@@ -71,6 +71,45 @@ node letters/generate-letters.js --input letters/sample-leads.csv --out /tmp/let
    **DEMO — NOT FOR MAILING** and writes `mail_ready=false` in the manifest.
    `--strict` turns that into a hard failure. Never mail DEMO-stamped letters.
 
+## Sending via Lob (print + mail)
+Once letters are generated and `output/manifest.csv` says `mail_ready=true`,
+dispatch them through Lob's print-and-mail API (USPS First-Class, B/W):
+
+```bash
+# 1) Validate everything; makes NO API calls:
+node letters/send-lob.js --dry-run
+
+# 2) Sandbox: Lob TEST environment (nothing mails), optionally verifying addresses:
+LOB_TEST_API_KEY=test_xxx node letters/send-lob.js --test --verify
+
+# 3) Live — actually prints and mails:
+LOB_API_KEY=live_xxx node letters/send-lob.js
+```
+
+How it works:
+- Recipients come from `output/manifest.csv` (only `mail_ready=true` rows);
+  the Lob `to.name` is the owner-approved salutation
+  `Property Owner / Former Owner` (the LGBS feed publishes no owner names).
+  Each letter body comes from `output/letters/<uid>.html`. The body is sent to
+  Lob as HTML — Lob rasterizes it into a print-ready PDF server-side (their
+  documented mode for letters; the `file` field accepts `html_string`),
+  so no local PDF toolchain is required. If a `<uid>.pdf` already exists,
+  pass `--pdf-dir` and the PDF takes precedence (sent base64-encoded).
+- `--test` uses `LOB_TEST_API_KEY`; live uses `LOB_API_KEY`. Both hit
+  `api.lob.com` — the key itself selects Lob's test vs production environment.
+- `--verify` runs Lob USPS address verification first and skips recipients
+  flagged `undeliverable`.
+- Every API call (success or failure) is appended to `output/lob_send_log.csv`
+  with Lob's letter id and the estimated per-letter cost (~$0.828, Developer
+  plan). On re-runs, uids already logged as successfully sent in that mode are
+  skipped, so a lead can never be double-mailed by accident (`--force`
+  overrides). `--max N` caps the batch; `--delay-ms` paces calls.
+- Honesty rails carry over from the generator: letters stamped
+  `DEMO — NOT FOR MAILING` and rows with `mail_ready=false` are never sent.
+
+Other options: `--manifest PATH`, `--letters-dir PATH`, `--config PATH`,
+`--log PATH`, `--color` (default is B/W). Run `node letters/send-lob.js --help`.
+
 ## Running against the real feed
 
 The scraper (`scrapers/lgbs.py`) is the upstream producer; once it lands in
