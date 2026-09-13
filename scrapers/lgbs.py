@@ -84,6 +84,12 @@ def _date(value: Any) -> str:
     return str(value or "").strip()[:10]
 
 
+def _county_key(name: Any) -> str:
+    """Normalize a county label to the feed's UPPER + ' COUNTY' form."""
+    county = _text(name).upper()
+    return county if county.endswith(" COUNTY") else county + " COUNTY"
+
+
 def _text(value: Any) -> str:
     # API detail responses occasionally contain line breaks in addresses.
     return " ".join(str(value or "").split())
@@ -199,6 +205,9 @@ class LGBSScraper:
         self.available_counties: tuple[str, ...] = ()
         self.last_detail_errors = 0
         self.records_pulled = 0
+        # Per-county counters: {"pulled" (raw feed rows), "candidates",
+        # "surplus" (sum of estimated surplus for deduplicated leads)}.
+        self.per_county: dict[str, dict[str, int | float]] = {}
 
     def discover_counties(self) -> tuple[str, ...]:
         """Read county/state values from filter_bar rather than hardcoding them."""
@@ -243,17 +252,36 @@ class LGBSScraper:
                 return
 
     def fetch(self) -> list[SurplusLead]:
-        """Fetch, normalize, deduplicate by uid, and optionally enrich details."""
+        """Fetch, normalize, deduplicate by parcel, and optionally enrich details.
+
+        Raw feed rows are counted per county into ``self.per_county``; after
+        deduplication, candidate counts and surplus sums are attributed back to
+        each county so the CLI can print a TX-wide per-county summary.
+        """
         counties = self.discover_counties()
-        by_uid: dict[str, SurplusLead] = {}
+        by_parcel: dict[str, SurplusLead] = {}
         for county in counties:
+            pulled = 0
             for raw in self._rows_for_county(county):
                 self.records_pulled += 1
+                pulled += 1
                 lead = normalize_record(raw)
                 if lead is None:
                     continue
-                by_uid.setdefault(lead.uid, lead)
-        leads = list(by_uid.values())
+                # One lead per parcel: a re-listed account (multiple sale
+                # dates/uids for the same parcel) must not flood the pipeline.
+                # The first occurrence wins; uid is kept as a tie-breaker.
+                by_parcel.setdefault(lead.parcel_id or lead.uid, lead)
+            stats = self.per_county.setdefault(county, {"pulled": 0, "candidates": 0, "surplus": 0.0})
+            stats["pulled"] = int(stats["pulled"]) + pulled
+        for lead in by_parcel.values():
+            if not lead.has_surplus:
+                continue
+            key = _county_key(lead.county)
+            stats = self.per_county.setdefault(key, {"pulled": 0, "candidates": 0, "surplus": 0.0})
+            stats["candidates"] = int(stats["candidates"]) + 1
+            stats["surplus"] = round(float(stats["surplus"]) + float(lead.estimated_surplus or 0.0), 2)
+        leads = list(by_parcel.values())
         if self.include_details:
             # Detail currently exposes case/legal description metadata but no
             # legal-owner name. Keep enrichment optional to avoid 1 request/row.
@@ -311,11 +339,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     rows = write_csv(leads, args.output)
     candidates = [lead for lead in leads if lead.has_surplus]
     total = round(sum(lead.estimated_surplus or 0 for lead in candidates), 2)
-    print(f"Counties: {', '.join(scraper.available_counties) if scraper.available_counties else 'none returned'}")
-    print(f"Records pulled: {scraper.records_pulled}")
-    print(f"Surplus candidates: {len(candidates)}")
-    print(f"Total estimated surplus: ${total:,.2f}")
+    print(f"Counties discovered: {', '.join(scraper.available_counties) if scraper.available_counties else 'none returned'}")
     print(f"CSV rows written: {rows} -> {args.output}")
+    print()
+    print("Per-county summary (records pulled | surplus candidates | est. surplus):")
+    for county in sorted(scraper.per_county):
+        stats = scraper.per_county[county]
+        print(f"  {county.title():<24} {int(stats['pulled']):>7} {int(stats['candidates']):>7}  ${float(stats['surplus']):>13,.2f}")
+    print(f"  {'TEXAS TOTAL':<24} {scraper.records_pulled:>7} {len(candidates):>7}  ${total:>13,.2f}")
     if args.details:
         print(f"Detail lookup errors: {scraper.last_detail_errors}")
     return 0
