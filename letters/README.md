@@ -87,20 +87,23 @@ LOB_API_KEY=live_xxx node letters/send-lob.js
 ```
 
 How it works:
-- Recipients come from `output/manifest.csv` (only `mail_ready=true` rows) and
-  each letter body from `output/letters/<uid>.html`. The body is sent to Lob as
-  HTML — Lob rasterizes it into a print-ready PDF server-side (their documented
-  mode for letters), so no local PDF toolchain is required. If a `<uid>.pdf`
-  already exists, pass `--pdf-dir` and the PDF takes precedence (sent
-  base64-encoded).
+- Recipients come from `output/manifest.csv` (only `mail_ready=true` rows);
+  the Lob `to.name` is the owner-approved salutation
+  `Property Owner / Former Owner` (the LGBS feed publishes no owner names).
+  Each letter body comes from `output/letters/<uid>.html`. The body is sent to
+  Lob as HTML — Lob rasterizes it into a print-ready PDF server-side (their
+  documented mode for letters; the `file` field accepts `html_string`),
+  so no local PDF toolchain is required. If a `<uid>.pdf` already exists,
+  pass `--pdf-dir` and the PDF takes precedence (sent base64-encoded).
 - `--test` uses `LOB_TEST_API_KEY`; live uses `LOB_API_KEY`. Both hit
   `api.lob.com` — the key itself selects Lob's test vs production environment.
 - `--verify` runs Lob USPS address verification first and skips recipients
   flagged `undeliverable`.
 - Every API call (success or failure) is appended to `output/lob_send_log.csv`
-  with Lob's letter id. On re-runs, uids already logged as successfully sent in
-  that mode are skipped, so a lead can never be double-mailed by accident
-  (`--force` overrides). `--max N` caps the batch; `--delay-ms` paces calls.
+  with Lob's letter id and the estimated per-letter cost (~$0.828, Developer
+  plan). On re-runs, uids already logged as successfully sent in that mode are
+  skipped, so a lead can never be double-mailed by accident (`--force`
+  overrides). `--max N` caps the batch; `--delay-ms` paces calls.
 - Honesty rails carry over from the generator: letters stamped
   `DEMO — NOT FOR MAILING` and rows with `mail_ready=false` are never sent.
 

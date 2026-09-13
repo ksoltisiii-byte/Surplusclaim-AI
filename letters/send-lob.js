@@ -39,12 +39,16 @@ const DEFAULT_LETTERS_DIR = path.join(__dirname, "output", "letters");
 const DEFAULT_CONFIG = path.join(__dirname, "config.json");
 const DEFAULT_LOG = path.join(__dirname, "output", "lob_send_log.csv");
 const LOB_API_BASE = "https://api.lob.com/v1";
-const RECIPIENT_NAME_FALLBACK = "Property Owner"; // LGBS feed has no owner names; letters say "Property Owner"
+// LGBS feed has no owner names; this salutation is owner-approved copy.
+const RECIPIENT_NAME_FALLBACK = "Property Owner / Former Owner";
+// Lob Developer-plan USPS first-class letter rate (B/W). Used for cost
+// estimates in dry-run and the cost column of the send log.
+const COST_PER_LETTER = 0.828;
 const LOG_HEADER = [
   "sent_at", "mode", "uid", "cause_nbr", "mail_type", "color",
   "http_status", "lob_letter_id", "lob_status", "deliverability",
   "to_name", "to_line1", "to_city", "to_state", "to_zip",
-  "estimated_surplus", "error",
+  "estimated_surplus", "cost", "error",
 ];
 
 /* ------------------------------------------------------------------ */
@@ -356,7 +360,9 @@ async function main() {
   console.log(`\nPlan (mode=${mode}${opts.verify ? ", verify" : ""}${opts.color ? ", COLOR" : ", B/W"}):`);
   const surpluses = todo.map((j) => parseFloat(j.row.estimated_surplus) || 0);
   const sumSurplus = surpluses.reduce((a, b) => a + b, 0);
+  const mailCost = todo.length * COST_PER_LETTER;
   console.log(`  ready to send : ${todo.length}  (estimated surplus $${sumSurplus.toFixed(2)}; 30% fee $${(sumSurplus * 0.30).toFixed(2)})`);
+  console.log(`  mail cost     : ~$${mailCost.toFixed(2)} (${todo.length} letters @ $${COST_PER_LETTER.toFixed(3)}/letter, Lob Developer plan)`);
   console.log(`  already sent  : ${alreadySent}${opts.force ? " (forced)" : ""}`);
   console.log(`  deferred      : ${deferred} (--max/other)`);
 
@@ -393,6 +399,7 @@ async function main() {
       to_state: to.address_state,
       to_zip: to.address_zip,
       estimated_surplus: j.row.estimated_surplus || "",
+      cost: "",
       lob_letter_id: "", lob_status: "", deliverability: "", http_status: "", error: "",
     };
 
@@ -426,6 +433,7 @@ async function main() {
           if (!row.deliverability && sendResult.data.to && sendResult.data.to.deliverability) {
             row.deliverability = sendResult.data.to.deliverability;
           }
+          row.cost = COST_PER_LETTER.toFixed(2);
           console.log(`  [${mode}] ${j.row.uid} -> ${sendResult.data.id} (${sendResult.data.status || "processed"})`);
         } else if (sendResult.data) {
           row.error = `HTTP ${sendResult.status}${sendResult.data.error ? `: ${sendResult.data.error.message || JSON.stringify(sendResult.data.error)}` : ""}`;
@@ -449,7 +457,8 @@ async function main() {
   }
 
   console.log(`\nDone (mode=${mode}). Sent: ${sentCount}; failed/skipped: ${todo.length - sentCount}. Log: ${opts.log}`);
-  console.log(`Sent surplus total: ${sentSurplus.toFixed(2)} (30% contingency fee: ${(sentSurplus * 0.30).toFixed(2)})`);
+  console.log(`Sent surplus total: $${sentSurplus.toFixed(2)} (30% contingency fee: $${(sentSurplus * 0.30).toFixed(2)})`);
+  console.log(`Mail cost (sent): ~$${(sentCount * COST_PER_LETTER).toFixed(2)} (${sentCount} @ $${COST_PER_LETTER.toFixed(3)})`);
   if (mode === "test") console.log("TEST MODE — nothing was actually mailed.");
 }
 
