@@ -4,6 +4,11 @@
 This module uses only the documented, unauthenticated GET API exposed by
 ``taxsales.lgbs.com``.  It intentionally leaves owner fields blank: the LGBS
 auction feed does not publish legal-owner names or contact information.
+
+The default pipeline emits only records whose feed status is ``Sold``:
+excess proceeds only exist after a property actually sells to a third party,
+so pre-auction statuses (Scheduled, Cancelled, Postponed, ...) are not
+actionable leads.  Pass ``--status any`` to pull every status.
 """
 from __future__ import annotations
 
@@ -191,6 +196,7 @@ class LGBSScraper:
         county: str | None = "HARRIS COUNTY",
         counties: Sequence[str] | None = None,
         state: str = "TX",
+        status: str | None = "Sold",
         page_size: int = 50,
         max_pages: int = 100,
         include_details: bool = False,
@@ -199,6 +205,10 @@ class LGBSScraper:
         requested = counties if counties is not None else ((county,) if county else None)
         self.counties = tuple(c.upper().strip() for c in requested) if requested else None
         self.state = state.upper().strip()
+        # "any"/empty disables the status filter and pulls every status.
+        cleaned = str(status or "").strip()
+        self.status: str | None = None if cleaned.upper() in ("", "ANY") else cleaned
+        self.records_status_filtered = 0
         self.page_size = max(1, min(int(page_size), 600))
         self.max_pages = max(1, int(max_pages))
         self.include_details = include_details
@@ -234,13 +244,16 @@ class LGBSScraper:
         for page in range(self.max_pages):
             if page:
                 time.sleep(self.client.delay)
-            payload = self.client.property_sales({
+            params: dict[str, Any] = {
                 "state": self.state,
                 "county": county,
                 "limit": self.page_size,
                 "offset": offset,
                 "ordering": "sale_date,street_name,address_full,uid",
-            })
+            }
+            if self.status is not None:
+                params["status"] = self.status
+            payload = self.client.property_sales(params)
             results = payload.get("results", [])
             if not isinstance(results, list) or not results:
                 return
@@ -250,6 +263,12 @@ class LGBSScraper:
             offset += len(results)
             if len(results) < self.page_size:
                 return
+
+    def _status_matches(self, row: dict[str, Any]) -> bool:
+        """True when the row's status matches the configured filter (case-insensitive)."""
+        if self.status is None:
+            return True
+        return _text(row.get("status")).lower() == self.status.lower()
 
     def fetch(self) -> list[SurplusLead]:
         """Fetch, normalize, deduplicate by parcel, and optionally enrich details.
@@ -265,6 +284,9 @@ class LGBSScraper:
             for raw in self._rows_for_county(county):
                 self.records_pulled += 1
                 pulled += 1
+                if not self._status_matches(raw):
+                    self.records_status_filtered += 1
+                    continue
                 lead = normalize_record(raw)
                 if lead is None:
                     continue
@@ -315,6 +337,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--county", action="append", dest="counties", help="County filter; repeatable (default: Harris)")
     parser.add_argument("--all-counties", action="store_true", help="Fetch every TX county returned by filter_bar")
+    parser.add_argument("--status", default="Sold", help="Only emit records with this feed status, e.g. Sold (default: Sold; use 'any' to disable)")
     parser.add_argument("-o", "--output", default=str(DEFAULT_OUTPUT))
     parser.add_argument("--page-size", type=int, default=50)
     parser.add_argument("--max-pages", type=int, default=100)
@@ -328,7 +351,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     scraper = LGBSScraper(
         client=LGBSClient(timeout=args.timeout, delay=args.delay),
         county=None if args.all_counties else "HARRIS COUNTY",
-        counties=counties, page_size=args.page_size, max_pages=args.max_pages,
+        counties=counties, status=args.status, page_size=args.page_size, max_pages=args.max_pages,
         include_details=args.details,
     )
     try:
@@ -340,6 +363,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     candidates = [lead for lead in leads if lead.has_surplus]
     total = round(sum(lead.estimated_surplus or 0 for lead in candidates), 2)
     print(f"Counties discovered: {', '.join(scraper.available_counties) if scraper.available_counties else 'none returned'}")
+    print(f"Status filter: {'any (all statuses)' if scraper.status is None else scraper.status} "
+          f"({scraper.records_status_filtered} raw rows excluded)")
     print(f"CSV rows written: {rows} -> {args.output}")
     print()
     print("Per-county summary (records pulled | surplus candidates | est. surplus):")
