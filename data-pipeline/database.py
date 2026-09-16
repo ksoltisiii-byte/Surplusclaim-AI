@@ -38,7 +38,8 @@ CREATE TABLE IF NOT EXISTS outreach_log (
 );
 CREATE TABLE IF NOT EXISTS payments (
  id INTEGER PRIMARY KEY, claim_id INTEGER NOT NULL REFERENCES claims(id) ON DELETE CASCADE,
- amount REAL NOT NULL, payment_type TEXT NOT NULL DEFAULT 'recovery', status TEXT NOT NULL DEFAULT 'pending', paid_at TEXT, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+ amount REAL NOT NULL, payment_type TEXT NOT NULL DEFAULT 'recovery', status TEXT NOT NULL DEFAULT 'pending', paid_at TEXT,
+ stripe_invoice_id TEXT, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE TABLE IF NOT EXISTS partners (
  id INTEGER PRIMARY KEY, name TEXT NOT NULL, email TEXT, phone TEXT, partner_type TEXT, status TEXT NOT NULL DEFAULT 'active', created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -54,6 +55,15 @@ CREATE INDEX IF NOT EXISTS idx_owners_contact ON owners(email, phone);
 CREATE INDEX IF NOT EXISTS idx_outreach_owner ON outreach_log(owner_id, sent_at);
 CREATE INDEX IF NOT EXISTS idx_claims_status ON claims(status);
 """
+
+# Migrations for databases created before a column existed. ``CREATE TABLE IF
+# NOT EXISTS`` never alters an existing table, so each migration adds its
+# column only when PRAGMA reports it missing. All migrations are idempotent and
+# safe on both fresh and pre-existing databases.
+def _apply_migrations(conn: sqlite3.Connection) -> None:
+    columns = {row[1] for row in conn.execute("PRAGMA table_info(payments)").fetchall()}
+    if "stripe_invoice_id" not in columns:
+        conn.execute("ALTER TABLE payments ADD COLUMN stripe_invoice_id TEXT")
 
 class Database:
     def __init__(self, path: str | Path = DEFAULT_DB):
@@ -71,7 +81,9 @@ class Database:
             conn.rollback(); raise
         finally: conn.close()
     def initialize(self) -> None:
-        with self.connection() as conn: conn.executescript(SCHEMA)
+        with self.connection() as conn:
+            conn.executescript(SCHEMA)
+            _apply_migrations(conn)
 
     def seed_demo_data(self) -> int:
         """Create the schema and insert the canonical demo properties/owners.
