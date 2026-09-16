@@ -17,7 +17,7 @@ import type {
  * A homeowner who responds to our outreach is sent THIS link. It loads ONLY
  * their own property + the engagement letter from the database (never any
  * demo data or another owner's information), captures a canvas signature, and
- * persists the signed engagement to Neon.
+ * persists the signed engagement to the PostgreSQL database (Tiger Cloud).
  */
 export const Route = createFileRoute("/sign")({
   validateSearch: (search: Record<string, unknown>) => ({

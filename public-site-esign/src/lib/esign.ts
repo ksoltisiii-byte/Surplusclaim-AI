@@ -6,8 +6,8 @@ import { BUSINESS } from "~/data/business";
 /**
  * Server-side logic for the public e-sign route (`/sign`).
  *
- * The engagement letter and the homeowner's property come from the Neon
- * database (DATABASE_URL). `sql()` from ~/db resolves lazily, so this module
+ * The engagement letter and the homeowner's property come from the
+ * PostgreSQL database (DATABASE_URL). `sql()` from ~/db resolves lazily, so this module
  * typechecks and the site builds even before the database is connected; at
  * runtime, queries return `db-not-configured` until DATABASE_URL exists.
  *
@@ -158,15 +158,13 @@ type SubmitResult =
   | { ok: true; engagement_id: number; reference: string }
   | { ok: false; code?: "db-not-configured" | "not-found"; message: string };
 
-const PNG_MAGIC = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
-
 export const submitSignature = createServerFn({ method: "POST" })
   .validator((d: SignSubmitInput) => ({
     token: String(d?.token ?? "").trim(),
     signer_name: String(d?.signer_name ?? "").trim(),
     signer_email: String(d?.signer_email ?? "").trim().toLowerCase(),
-    signer_phone: String(d?.signer_phone ?? "").trim() || undefined,
-    mailing_address: String(d?.mailing_address ?? "").trim() || undefined,
+    signer_phone: String(d?.signer_phone ?? "").trim() || null,
+    mailing_address: String(d?.mailing_address ?? "").trim() || null,
     signature: String(d?.signature ?? ""),
     agree: Boolean(d?.agree),
   }))
@@ -180,6 +178,9 @@ export const submitSignature = createServerFn({ method: "POST" })
       return { ok: false, message: "Please draw your signature on the pad before signing." };
     }
     const sigBuf = Buffer.from(sig.split(",")[1] ?? "", "base64");
+    // PNG magic bytes — checked only inside the (server-only) handler so the
+    // node:buffer import never leaks into the client bundle.
+    const PNG_MAGIC = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
     if (sigBuf.length < 400 || !sigBuf.subarray(0, 8).equals(PNG_MAGIC)) {
       return { ok: false, message: "Invalid signature image. Please draw your signature again." };
     }

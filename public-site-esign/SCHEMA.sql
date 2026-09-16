@@ -1,6 +1,7 @@
 -- ============================================================================
 -- SurplusClaim AI — Public e-sign flow (route /sign on the TanStack site)
--- Neon (serverless Postgres) schema required by src/lib/esign.ts
+-- Database schema required by src/lib/esign.ts — standard managed PostgreSQL
+-- (Tiger Cloud) via DATABASE_URL; client is `postgres` (postgres.js).
 --
 -- Who runs this: the team lead, once DATABASE_URL is connected (Secrets →
 -- database card). The code at /home/team/shared/site already builds and serves
@@ -91,7 +92,7 @@ CREATE INDEX IF NOT EXISTS idx_engagements_owner ON engagements(owner_id);
 --    (only the lead/owner does the sending — outreach is theirs).
 --
 -- Notes
--- - gen_random_uuid() requires PostgreSQL 13+ (Neon is 15+).
+-- - gen_random_uuid() requires PostgreSQL 13+ (Tiger Cloud is standard PG, OK).
 -- - The letter itself is composed server-side from owner + property + the
 --   business details in src/data/business.ts (mirror of letters/config.json,
 --   owner-ratified 2026-09-08). No business contact values are hardcoded in the
