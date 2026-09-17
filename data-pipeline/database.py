@@ -28,7 +28,13 @@ CREATE TABLE IF NOT EXISTS engagements (
 );
 CREATE TABLE IF NOT EXISTS claims (
  id INTEGER PRIMARY KEY, property_id INTEGER NOT NULL REFERENCES properties(id), owner_id INTEGER NOT NULL REFERENCES owners(id),
- claim_number TEXT UNIQUE, state TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'draft', filed_at TEXT, recovered_amount REAL DEFAULT 0,
+ claim_number TEXT UNIQUE, state TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'draft', filed_at TEXT,
+ venue TEXT, confirmation_number TEXT, recovered_amount REAL DEFAULT 0,
+ created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS claim_tracking (
+ id INTEGER PRIMARY KEY, claim_id INTEGER NOT NULL REFERENCES claims(id) ON DELETE CASCADE,
+ filed_at TEXT, deadline_note TEXT, follow_up_date TEXT, notes TEXT,
  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE TABLE IF NOT EXISTS outreach_log (
@@ -61,9 +67,14 @@ CREATE INDEX IF NOT EXISTS idx_claims_status ON claims(status);
 # column only when PRAGMA reports it missing. All migrations are idempotent and
 # safe on both fresh and pre-existing databases.
 def _apply_migrations(conn: sqlite3.Connection) -> None:
-    columns = {row[1] for row in conn.execute("PRAGMA table_info(payments)").fetchall()}
-    if "stripe_invoice_id" not in columns:
+    payment_cols = {row[1] for row in conn.execute("PRAGMA table_info(payments)").fetchall()}
+    if "stripe_invoice_id" not in payment_cols:
         conn.execute("ALTER TABLE payments ADD COLUMN stripe_invoice_id TEXT")
+    claim_cols = {row[1] for row in conn.execute("PRAGMA table_info(claims)").fetchall()}
+    if "venue" not in claim_cols:
+        conn.execute("ALTER TABLE claims ADD COLUMN venue TEXT")
+    if "confirmation_number" not in claim_cols:
+        conn.execute("ALTER TABLE claims ADD COLUMN confirmation_number TEXT")
 
 class Database:
     def __init__(self, path: str | Path = DEFAULT_DB):
