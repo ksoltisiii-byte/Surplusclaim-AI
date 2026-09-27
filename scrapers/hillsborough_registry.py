@@ -8,8 +8,9 @@ directory with no auth and no bot wall:
 
     https://publicrec.hillsclerk.com/Civil/registry_trust_balances/
 
-The file is republished every night ("Registry_and_TrustAccounts_Balances_as_of_MM_DD_YYYY.pdf"
-style names; the directory listing shows the newest file first).  Every row is
+The Clerk republishes the file every night, weekdays only (Mon-Fri), named
+"Registry_and_TrustAccounts_Balances_as_of_<Www>_MM_DD_YYYY.pdf" (live example:
+Registry_and_TrustAccounts_Balances_as_of_Fri_09_25_2026.pdf).  Every row is
 money ON DEPOSIT with the Clerk -- a balance proves the funds exist today.
 This is the same winning posture as the Palm Beach parser (Source B quick win)
 but with a vastly better source: nightly freshness, no Akamai wall, and
@@ -75,6 +76,19 @@ LOGGER = logging.getLogger("hillsborough_registry")
 # --- Document source (verified 2026-09-24; open directory, no auth, no bot wall) ---
 LIVE_DIR = "https://publicrec.hillsclerk.com/Civil/registry_trust_balances/"
 PDF_FILENAME_RE = re.compile(r"^Registry_and_TrustAccounts_Balances_as_of_.+\.pdf$", re.I)
+
+# The embedded as-of date inside live filenames: "as_of_<Www>_MM_DD_YYYY" (e.g.
+# ..._as_of_Fri_09_25_2026.pdf).  The archived YYYY-MM-DD dash shape (seen in local
+# snapshots) is accepted too.  Parsing the DATE -- not sorting the name string --
+# matters because the weekday abbreviation sorts wrongly: Fri < Mon < Thu < Tue <
+# Wed, so a plain name sort picks Wed over the newer Thu/Fri (observed 2026-09-27:
+# the live auto-fetch grabbed Wed_09_23 while Fri_09_25 was the freshest file).
+PDF_ASOF_RE = re.compile(
+    r"as_of_(?:(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)_)?"
+    r"(?:(?P<y1>\d{4})[-_](?P<m1>\d{2})[-_](?P<d1>\d{2})"
+    r"|(?P<m2>\d{2})_(?P<d2>\d{2})_(?P<y2>\d{4}))(?=\.pdf$)",
+    re.I,
+)
 
 # Local snapshot used for development/offline runs (copy kept with the research docs).
 _LOCAL_CANDIDATES = [
@@ -154,8 +168,38 @@ def _read_bytes(url: str, timeout: int = 45) -> bytes:
         return resp.read()
 
 
+def _asof_date(filename: str) -> datetime | None:
+    """Return the as-of date embedded in a registry PDF filename, or None.
+
+    Live names embed "<Www>_MM_DD_YYYY" (…_as_of_Fri_09_25_2026.pdf); archived
+    snapshots use "YYYY-MM-DD" (…_as_of_2026-09-22.pdf).  Returns None when the
+    date cannot be parsed (naming change, corrupted name) so callers can fall
+    back instead of guessing.
+    """
+    m = PDF_ASOF_RE.search(filename)
+    if not m:
+        return None
+    try:
+        if m.group("y1"):
+            return datetime(int(m.group("y1")), int(m.group("m1")), int(m.group("d1")))
+        return datetime(int(m.group("y2")), int(m.group("m2")), int(m.group("d2")))
+    except ValueError:  # e.g. 09_31_2026 -- not a real calendar date
+        return None
+
+
 def _latest_pdf_url(dir_url: str = LIVE_DIR) -> Tuple[str, str]:
-    """Return (url, filename of the newest registry PDF listed in the open directory)."""
+    """Return (url, filename of the newest registry PDF listed in the open directory).
+
+    The Clerk republishes the registry every night, weekdays only (Mon-Fri), so
+    the directory holds one file per weekday and no weekend file -- the most
+    recent file is simply the one with the greatest embedded as-of date.  We
+    select by that PARSED date because a lexicographic sort of the name string
+    compares the weekday abbreviation first (Fri < Mon < Thu < Tue < Wed) and
+    would pick Wed over the newer Thu/Fri -- the exact failure observed
+    2026-09-27 (auto-fetch grabbed Wed_09_23 while Fri_09_25 was freshest).
+    Unknown-dated names sort behind every dated one (and by name among
+    themselves) so a naming change can never shadow a genuinely newer file.
+    """
     html = _read_bytes(dir_url).decode("utf-8", "replace")
     pdfs = []
     for m in re.finditer(r'href="([^"]+\.pdf)"', html, re.I):
@@ -168,10 +212,15 @@ def _latest_pdf_url(dir_url: str = LIVE_DIR) -> Tuple[str, str]:
             "No registry PDF found in the directory listing. The file naming may have "
             "changed -- inspect " + dir_url
         )
-    # Directory listings are newest-first (Apache default); sort defensively by the
-    # embedded As-of date, which sorts lexicographically for MM_DD_YYYY naming.
-    pdfs = sorted(set(pdfs), reverse=True)
-    return urljoin(dir_url, pdfs[0]), pdfs[0]
+    dated = [(name, _asof_date(name)) for name in set(pdfs)]
+    dated.sort(key=lambda item: (item[1] or datetime.min, item[0]), reverse=True)
+    newest_name = dated[0][0]
+    LOGGER.debug(
+        "Directory PDFs (newest first): %s",
+        ", ".join(f"{n} ({d:%Y-%m-%d})" if d else f"{n} (date unparsed)"
+                  for n, d in dated),
+    )
+    return urljoin(dir_url, newest_name), newest_name
 
 
 def fetch_pdf(pdf_path: str | None = None) -> Tuple[Path, str]:
