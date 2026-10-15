@@ -10,6 +10,7 @@ import type {
   SignEngagementData,
   SignLetter,
 } from "~/lib/esign";
+import { getDbStatus } from "~/lib/db-status";
 
 /**
  * Public e-sign route: /sign?token=<unguessable per-owner UUID>
@@ -138,6 +139,11 @@ function SignPage() {
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState<string | null>(null);
 
+  useEffect(() => {
+    // Fire-and-forget liveness ping for the /_serverFn/<id> health endpoint — keeps the
+    // server-function module in the bundle and exercises the health check on the live host.
+    void getDbStatus().catch(() => undefined);
+  }, []);
   useEffect(() => {
     let cancelled = false;
     (async () => {
