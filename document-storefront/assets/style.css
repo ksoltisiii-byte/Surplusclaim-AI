@@ -1,0 +1,186 @@
+/* ============================================================
+   Lane B — self-serve legal-document template storefront
+   WORKING DRAFT — for internal review only. Do not publish.
+   Plain static CSS. No frameworks, no CDNs, no JS.
+   ============================================================ */
+
+:root {
+  --ink: #1a2332;
+  --muted: #5b6b7f;
+  --line: #dde3ea;
+  --bg: #f7f9fb;
+  --card: #ffffff;
+  --brand: #0f4c81;
+  --brand-soft: #eaf1f8;
+  --accent: #b3541e;      /* restrained, non-"urgent" accent */
+  --warn-bg: #fff7e0;
+  --warn-border: #e6c15a;
+  --serif: Georgia, "Times New Roman", serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; }
+
+body {
+  font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+}
+
+/* ---------- DRAFT banner ---------- */
+.draft-banner {
+  background: var(--warn-bg);
+  border-bottom: 2px solid var(--warn-border);
+  color: #5c4700;
+  text-align: center;
+  font-size: 0.95rem;
+  padding: 0.55rem 1rem;
+  letter-spacing: 0.02em;
+}
+.draft-banner strong { font-weight: 700; }
+
+/* ---------- header / nav ---------- */
+.site-header {
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
+}
+.header-inner {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 1.1rem 1.25rem;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.brand { font-size: 1.25rem; font-weight: 700; color: var(--brand); }
+.brand small { display: block; font-size: 0.78rem; font-weight: 500; color: var(--muted); letter-spacing: 0.04em; }
+.site-nav a {
+  color: var(--brand);
+  text-decoration: none;
+  font-weight: 600;
+  margin-left: 1.1rem;
+  font-size: 0.95rem;
+}
+.site-nav a:hover { text-decoration: underline; }
+
+/* ---------- layout ---------- */
+.wrap { max-width: 980px; margin: 0 auto; padding: 0 1.25rem; }
+main.wrap { padding-top: 1.8rem; padding-bottom: 3rem; }
+
+.page-head h1 { font-size: 1.9rem; line-height: 1.2; margin: 0 0 0.35rem; }
+.page-head .lede { color: var(--muted); font-size: 1.08rem; margin: 0 0 1.4rem; }
+
+/* ---------- cards ---------- */
+.grid2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.25rem;
+}
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 1.5rem;
+}
+.card h2 { margin: 0 0 0.4rem; font-size: 1.25rem; }
+.card .statute {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-bottom: 0.8rem;
+  letter-spacing: 0.03em;
+}
+.card p { margin: 0 0 0.9rem; }
+.card .price-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.card .price-row .price { font-weight: 700; font-size: 1.15rem; }
+.card .price-row .price-label {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+.cta {
+  display: inline-block;
+  background: var(--brand);
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  padding: 0.7rem 1.2rem;
+  border-radius: 8px;
+}
+.cta:hover { background: #0a3e6b; }
+
+/* ---------- sections ---------- */
+section.block { margin-top: 2.4rem; }
+section.block h2 { font-size: 1.35rem; margin: 0 0 0.75rem; }
+section.block h3 { font-size: 1.08rem; margin: 1.4rem 0 0.4rem; }
+section.block p, section.block li { line-height: 1.65; }
+ul, ol { padding-left: 1.3rem; }
+
+/* ---------- notices ---------- */
+.notice {
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--accent);
+  background: #fdf6f1;
+  border-radius: 0 8px 8px 0;
+  padding: 1rem 1.15rem;
+  margin: 1.4rem 0;
+  font-size: 0.97rem;
+}
+.notice h4 { margin: 0 0 0.4rem; font-size: 1rem; color: var(--accent); }
+.notice p { margin: 0.35rem 0; }
+.notice.inline-card { border-left-color: var(--brand); background: var(--brand-soft); }
+.notice.inline-card h4 { color: var(--brand); }
+
+/* ---------- product detail ---------- */
+.letter-preview {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 1.6rem 1.8rem;
+  font-family: var(--serif);
+  font-size: 1.02rem;
+  line-height: 1.7;
+  margin: 1.4rem 0 2rem;
+  white-space: pre-wrap;
+}
+
+/* ---------- terms / faq ---------- */
+.faq details {
+  border: 1px solid var(--line);
+  background: var(--card);
+  border-radius: 8px;
+  padding: 0.9rem 1rem;
+  margin-bottom: 0.7rem;
+}
+.faq summary { font-weight: 600; cursor: pointer; }
+.faq details p { margin: 0.6rem 0 0; }
+
+/* ---------- footer ---------- */
+.site-footer {
+  background: var(--ink);
+  color: #c7d2df;
+  font-size: 0.88rem;
+  margin-top: 2.5rem;
+}
+.site-footer .wrap { padding-top: 1.6rem; padding-bottom: 1.6rem; }
+.site-footer a { color: #9fc1e4; }
+.site-footer .fine { color: #8d9bad; line-height: 1.55; }
+.fine { color: var(--muted); font-size: 0.92rem; }
+
+/* ---------- print ---------- */
+@media print {
+  .draft-banner, .site-header, .site-nav, .notice, section.block h2, .no-print { display: none !important; }
+  body { background: #fff; }
+  .letter-preview { border: 0; padding: 0; margin: 0; white-space: pre-wrap; }
+  main.wrap { padding: 0; margin: 0; }
+  .site-footer { background: none; color: #000; }
+  .site-footer .fine { color: #000; }
+}
