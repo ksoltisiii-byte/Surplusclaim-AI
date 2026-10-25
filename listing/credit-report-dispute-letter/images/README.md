@@ -91,10 +91,9 @@ Same as the other sets:
   sizes in `html/style.css` (`html, body { width/height }` and `.slide`).
 - The Etsy thumbnail crop may cut the top/bottom ~5–10% of the cover — key text
   is kept inside the central band of `01-cover.png` by design.
-- Shop name on the images is **SurplusClaimAI** (matching `../crdl-listing-copy.md`,
-  the NDA set, and the DVL set; the IC set used "SurplusClaim AI" — the
-  brand-naming question is being raised to the owner separately; if one form is
-  chosen, do a global find/replace in `html/` and re-render).
+- Shop name on the images is **SurplusClaimAI** (matching `../crdl-listing-copy.md`
+  and the business plan) with no space — used consistently across all four
+  products' listing sets.
 - Do NOT add Etsy attributes, tags, or title keywords promising a credit outcome,
   a score change, or a credit-repair service when listing (per the copy's Etsy
   notes, which also forbid bundling this with the DVL as a "credit repair" package).

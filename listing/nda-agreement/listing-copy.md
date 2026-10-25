@@ -85,7 +85,7 @@ HOW IT WORKS
 
 PLEASE READ BEFORE YOU BUY
 • This is a blank template, not legal advice. It is a form. It does not tell you what to choose or what applies to your situation.
-• SurplusClaim AI is not a law firm. We are not lawyers, and we do not provide legal services of any kind.
+• SurplusClaimAI is not a law firm. We are not lawyers, and we do not provide legal services of any kind.
 • Buying, downloading, or using this template does not create an attorney-client relationship.
 • This template is not a substitute for a licensed attorney in your state. Laws differ from state to state and change over time.
 • No outcome is guaranteed. We make no promise about any result from using this template.
@@ -201,7 +201,7 @@ Small businesses, freelancers, consultants, founders, and anyone who needs to pu
 ## Please read before you buy
 
 - **This is a blank template, not legal advice.** It is a form. It does not tell you what to choose or what applies to your situation.
-- **SurplusClaim AI is not a law firm.** We are not lawyers, and we do not provide legal services of any kind.
+- **SurplusClaimAI is not a law firm.** We are not lawyers, and we do not provide legal services of any kind.
 - **No attorney-client relationship** is created by buying, downloading, or using this template.
 - **Not a substitute for a licensed attorney** in your state. Laws differ from state to state and change over time.
 - **No outcome is guaranteed.** We make no promise about any result from using this template.
