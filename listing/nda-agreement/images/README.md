@@ -61,6 +61,8 @@ iframe (`../../_build/non-disclosure-agreement.html`) resolves.
 - Editable DOCX; PDF **7 pages US Letter** (the NDA is 7 pages — the IC set's
   "8 pages" does NOT carry over).
 - 15 numbered sections; Section 10 = One-Way or Mutual, choose one.
+- 44 fill-in blanks in the DOCX and PDF (bracket count verified 44 = 44 in the
+  claims table of `../nda-listing-copy.md`); stated on the cover doc-note.
 - Blanks in bold shaded blocks, e.g. `[DISCLOSING PARTY NAME]`, `[EFFECTIVE DATE]`.
 - Plus one-page "How to use this template" cover and full disclaimer at the end.
 - No refunds — all sales final (instant digital download), stated on slides 3 and 6.
