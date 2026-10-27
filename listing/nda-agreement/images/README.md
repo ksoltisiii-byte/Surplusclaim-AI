@@ -79,6 +79,5 @@ Same as the IC set:
   is kept inside the central band of `01-cover.png` by design; re-check if Etsy
   recrops aggressively.
 - Shop name on the images is **SurplusClaimAI** (matching the shop name in
-  `../nda-listing-copy.md` and the business plan) with no space — the IC set used
-  "SurplusClaim AI" with a space. If the owner prefers one form everywhere,
-  regenerate at the same viewport after a find/replace in `html/`.
+  `../nda-listing-copy.md` and the business plan) with no space — used
+  consistently across all four products' listing sets.
