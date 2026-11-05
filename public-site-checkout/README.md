@@ -55,12 +55,20 @@ the server. They used to sit in `src/data/checkout.ts`, which meant every visito
 downloaded the paths in the client bundle whether or not they had bought
 anything; `grep -r "/downloads/" dist/client` now returns nothing.
 
-| item | token |
+| item | folder |
 | --- | --- |
-| debt-validation-letter | 728673bdd237f184f6fcc382af373a69368e05253c4555a3 |
-| credit-report-dispute-letter | dcc79fe45b669e36537c11b92f8a83d917d6e7e0a91ac24a |
-| independent-contractor-agreement | 85acb94459246a8924ff9a6ea9b76e9fe5179539d749b497 |
-| non-disclosure-agreement | 4f8f2ee4cd4b6a91abbb0d8b0f8fd37a302c1e16bbf938be |
+| debt-validation-letter | `public/downloads/<token>/` |
+| credit-report-dispute-letter | `public/downloads/<token>/` |
+| independent-contractor-agreement | `public/downloads/<token>/` |
+| non-disclosure-agreement | `public/downloads/<token>/` |
+
+The token values are deliberately **not** written down here, in any other file
+in this repository, or in any commit message. This repository is public: a
+committed token is a published download path, and the folder name alone is what
+gates the file. The values live only in the working site's `src/lib/purchase.ts`
+(the source of truth that gets published) and in the `public/downloads/` folder
+names beside it. `purchase.ts` is gitignored so it cannot be re-committed here
+by accident — see the note at the top of that file.
 
 **Mitigation, not access control.** `/thank-you` now requires BOTH a known `item`
 slug AND a `session_id` shaped like a Stripe Checkout Session id
