@@ -35,3 +35,7 @@ logs/
 
 # Generated letters (run the generator to recreate)
 letters/output/
+
+# The site mirror under public-site-checkout/ keeps SOURCE in src/data/ —
+# it is not runtime data, so it must not be swallowed by the "data/" rule above.
+!public-site-checkout/src/data/
