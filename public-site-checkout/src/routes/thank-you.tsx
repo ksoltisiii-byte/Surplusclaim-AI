@@ -2,11 +2,22 @@
  * /thank-you — where Stripe sends the buyer after a successful payment.
  *
  * The payment links are configured to redirect to
- * /thank-you?item=<slug>, with <slug> one of the five keys in ~/data/checkout.
- * This page reads that slug and renders the download links for exactly that
- * item. An unknown or missing slug renders a plain fallback — never a crash, and
- * never a list of every product's files (that would hand the paid files to
- * anyone who typed this address).
+ *   /thank-you?item=<slug>&session_id={CHECKOUT_SESSION_ID}
+ * with <slug> one of the five keys in ~/data/checkout. Stripe substitutes a real
+ * Checkout Session id for {CHECKOUT_SESSION_ID}.
+ *
+ * THE PAGE ONLY SHOWS FILES WHEN BOTH PARTS ARE PRESENT AND WELL-FORMED.
+ *   - No `item`, or an unknown one → the fallback below.
+ *   - No `session_id`, or one that is not shaped like a Stripe session id → the
+ *     same fallback, with no download links and no file paths in the HTML.
+ * The check itself lives on the server (~/lib/purchase); this file only renders
+ * what the server agreed to hand back.
+ *
+ * WHAT THIS IS NOT. It is guess-resistance, not verification: the site has no
+ * Stripe secret key, so it cannot ask Stripe whether that session was actually
+ * paid. Someone who invents a well-formed-looking id gets the files, and a buyer
+ * who shares their own link passes it on. See the long comment in
+ * ~/lib/purchase before describing this page as "protected".
  *
  * WHAT THIS PAGE DOES NOT SAY
  *   Nothing here is emailed. The site has no email automation of any kind, so
@@ -17,7 +28,8 @@
  * end up in an index.
  */
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { CHECKOUT_ITEMS, checkoutItem } from "~/data/checkout";
+import { CHECKOUT_ITEMS } from "~/data/checkout";
+import { getPurchase } from "~/lib/purchase";
 import {
   ComplianceNotice,
   SiteFooter,
@@ -29,7 +41,17 @@ import { BUSINESS } from "~/data/business";
 export const Route = createFileRoute("/thank-you")({
   validateSearch: (search: Record<string, unknown>) => ({
     item: typeof search.item === "string" ? search.item : undefined,
+    session_id:
+      typeof search.session_id === "string" ? search.session_id : undefined,
   }),
+  loaderDeps: ({ search }) => ({
+    item: search.item,
+    sessionId: search.session_id,
+  }),
+  loader: ({ deps }) =>
+    getPurchase({
+      data: { item: deps.item ?? "", sessionId: deps.sessionId ?? "" },
+    }),
   component: ThankYou,
   head: () => ({
     meta: [
@@ -45,8 +67,8 @@ export const Route = createFileRoute("/thank-you")({
 });
 
 function ThankYou() {
-  const search = Route.useSearch();
-  const purchase = checkoutItem(search?.item);
+  const result = Route.useLoaderData();
+  const purchase = result?.ok ? result.purchase : undefined;
 
   return (
     <div className="sf-root">
@@ -104,9 +126,9 @@ function ThankYou() {
               <h1>We could not match that order</h1>
               <p className="sf-lede">
                 This page shows download links for one purchase, and the address
-                that brought you here did not name one of our five products. If you
-                just paid, the link from the payment page should have included the
-                item — open it again from that page, or call us on{" "}
+                that brought you here did not carry a valid order reference. If you
+                just paid, open the link from your payment confirmation page again
+                — that link carries the reference this page needs — or call us on{" "}
                 <a href={BUSINESS.phoneHref}>{BUSINESS.phone}</a> and we will sort
                 it out.
               </p>
@@ -123,9 +145,7 @@ function ThankYou() {
               <ul>
                 {CHECKOUT_ITEMS.map((item) => (
                   <li key={item.slug}>
-                    <Link to={item.slug === "consumer-letters-bundle" ? "/consumer-letters-bundle" : `/${item.slug}`}>
-                      {item.name}
-                    </Link>
+                    <Link to={`/${item.slug}`}>{item.name}</Link>
                   </li>
                 ))}
               </ul>

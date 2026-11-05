@@ -1,0 +1,10 @@
+# robots.txt — SurplusClaimAI
+#
+# Crawling is allowed everywhere except the post-purchase delivery page, which
+# must never be indexed (it shows one buyer's download links).
+
+User-agent: *
+Allow: /
+Disallow: /thank-you
+
+Sitemap: https://www.surplusclaimai.com/sitemap.xml
