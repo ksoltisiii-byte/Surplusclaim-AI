@@ -39,3 +39,10 @@ letters/output/
 # The site mirror under public-site-checkout/ keeps SOURCE in src/data/ —
 # it is not runtime data, so it must not be swallowed by the "data/" rule above.
 !public-site-checkout/src/data/
+
+# Paid-product download paths. The 48-hex folder tokens under public/downloads/
+# are the ONLY thing protecting the paid files, and this repository is PUBLIC.
+# The token map lives in the working site (/home/team/shared/site), which is what
+# gets published; it must never be committed here. Committing it once published
+# every download path to anyone who read the repo.
+public-site-checkout/src/lib/purchase.ts
