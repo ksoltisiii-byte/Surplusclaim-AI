@@ -27,6 +27,11 @@ export interface Product {
   pleaseRead: string[]; // "Please read before you buy"
   consumerLetter: boolean; // true for DVL + CRDL (adds credit-repair line)
   guidePath: string; // plain-English guide page for this product
+  /**
+   * Optional second guide, for a related question this product's own guide does
+   * not answer. Rendered under the "Read our plain-English guide" line.
+   */
+  relatedGuide?: { lead: string; to: string; label: string };
   metaTitle: string;
   metaDescription: string;
 }
@@ -97,6 +102,11 @@ export const PRODUCTS: Product[] = [
     ],
     consumerLetter: false,
     guidePath: "/do-i-need-an-independent-contractor-agreement",
+    relatedGuide: {
+      lead: "Bringing someone in to help with the work?",
+      to: "/do-i-need-a-contract-with-a-subcontractor",
+      label: "Read our guide to contracts with a subcontractor",
+    },
     metaTitle: "Independent Contractor Agreement Template — Blank Fill-In",
     metaDescription:
       "Blank Independent Contractor Agreement template in DOCX and PDF: 16 numbered sections with bracketed blanks you fill in yourself. Not legal advice.",
@@ -400,6 +410,12 @@ export function ProductPage({ product }: { product: Product }) {
               Not sure if this is the right document?{" "}
               <Link to={product.guidePath}>Read our plain-English guide</Link>.
             </p>
+            {product.relatedGuide && (
+              <p className="sf-guide-link">
+                {product.relatedGuide.lead}{" "}
+                <Link to={product.relatedGuide.to}>{product.relatedGuide.label}</Link>.
+              </p>
+            )}
           </section>
 
           <section className="sf-block">
