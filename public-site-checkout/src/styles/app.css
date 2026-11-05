@@ -1,0 +1,373 @@
+@import "tailwindcss";
+@layer base {
+  html,
+  body {
+    @apply bg-white text-gray-900 antialiased dark:bg-gray-950 dark:text-gray-100;
+  }
+}
+
+/* ============================================================
+   Lane B — self-serve legal-document template storefront
+   Pages: "/" (home), 4 product pages, "/terms".
+   All class names are prefixed "sf-" so they never collide with
+   the token-gated /sign page's inline styles.
+   ============================================================ */
+.sf-root {
+  --ink: #1a2332;
+  --muted: #5b6b7f;
+  --line: #dde3ea;
+  --bg: #f7f9fb;
+  --card: #ffffff;
+  --brand: #0f4c81;
+  --brand-soft: #eaf1f8;
+  --accent: #b3541e;
+  --serif: Georgia, "Times New Roman", serif;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+  line-height: 1.6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.sf-root * { box-sizing: border-box; }
+.sf-root h1, .sf-root h2, .sf-root h3, .sf-root h4, .sf-root p, .sf-root ul, .sf-root ol {
+  margin: 0;
+  padding: 0;
+}
+.sf-root a { color: var(--brand); text-decoration: none; }
+.sf-root a:hover { text-decoration: underline; }
+
+/* ---------- header / nav ---------- */
+.sf-header {
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
+}
+.sf-header-inner {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.sf-brand { font-size: 1.25rem; font-weight: 700; color: var(--brand); }
+.sf-brand small {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+.sf-nav { display: flex; gap: 1.1rem; flex-wrap: wrap; }
+.sf-nav a { font-size: 0.93rem; font-weight: 600; color: var(--ink); }
+.sf-nav a:hover { color: var(--brand); text-decoration: none; }
+.sf-nav a.sf-active { color: var(--brand); }
+
+/* ---------- layout ---------- */
+.sf-wrap {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 1.25rem;
+  width: 100%;
+}
+.sf-main { flex: 1; }
+
+/* ---------- compliance notice (mandatory, every page) ---------- */
+.sf-notice {
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--brand);
+  background: var(--brand-soft);
+  border-radius: 0 8px 8px 0;
+  padding: 1rem 1.15rem;
+  margin: 1.4rem 0;
+  font-size: 0.97rem;
+}
+.sf-notice h4 { margin: 0 0 0.4rem; font-size: 1rem; color: var(--brand); }
+.sf-notice p { margin: 0.35rem 0; }
+
+/* ---------- page head ---------- */
+.sf-page-head { margin: 2.4rem 0 0; }
+.sf-page-head h1 { font-size: 2rem; font-weight: 800; color: var(--ink); line-height: 1.2; }
+.sf-lede { margin-top: 0.65rem; font-size: 1.05rem; color: var(--muted); max-width: 66ch; }
+.sf-statute { color: var(--muted); font-size: 0.9rem; margin-top: 0.5rem; letter-spacing: 0.02em; }
+
+/* ---------- sections ---------- */
+.sf-block { margin-top: 2.2rem; }
+.sf-block h2 { font-size: 1.35rem; margin: 0 0 0.7rem; color: var(--ink); }
+.sf-block h3 { font-size: 1.08rem; margin: 1.4rem 0 0.4rem; }
+.sf-block p, .sf-block li { line-height: 1.65; }
+.sf-block ul, .sf-block ol { padding-left: 1.3rem; margin: 0.4rem 0; }
+.sf-block li { margin-bottom: 0.35rem; }
+.sf-section-list li { margin-bottom: 0.45rem; }
+.sf-section-list strong { color: var(--ink); }
+
+/* ---------- product cards / pricing ---------- */
+.sf-grid2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.25rem;
+  margin-top: 0.5rem;
+}
+.sf-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+.sf-card h2 { margin: 0 0 0.4rem; font-size: 1.25rem; }
+/* Cover thumbnail at the top of every card. Fixed 4:5 box (the source covers are
+   4:5) so all five cards, in both grids, show the same image height and the rows
+   stay aligned. width/height attrs on the <img> reserve the box before load. */
+.sf-card-cover {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  object-position: top center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  margin-bottom: 1.1rem;
+}
+.sf-card .sf-statute { margin-bottom: 0.8rem; }
+.sf-card p { margin: 0 0 0.9rem; flex: 1; }
+.sf-price-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.sf-price-row .sf-price { font-weight: 700; font-size: 1.15rem; }
+.sf-price-row .sf-price-label { color: var(--muted); font-weight: 600; font-size: 0.92rem; }
+.sf-price-note { color: var(--muted); font-size: 0.9rem; font-style: italic; }
+/* two-template bundle card, sits under the consumer-letter cards */
+/* .sf-card is a column flexbox, so the row direction has to be set explicitly
+   here or the cover and the text stack instead of sitting side by side. */
+.sf-bundle { margin-top: 1.25rem; display: flex; flex-direction: row; gap: 1.75rem; align-items: flex-start; }
+/* The bundle card spans the whole row instead of one grid column, so its cover
+   sits beside the text on desktop rather than above it — otherwise the image
+   leaves a large empty area to its right. Stacks back to one column on narrow
+   screens (see the max-width rule below). */
+.sf-bundle .sf-card-cover { flex: 0 0 300px; max-width: 300px; margin-bottom: 0; }
+.sf-bundle-body { flex: 1 1 auto; min-width: 0; }
+.sf-bundle-body .sf-cta { display: inline-block; }
+.sf-bundle .sf-cta { align-self: flex-start; }
+@media (max-width: 760px) {
+  .sf-bundle { display: block; }
+  .sf-bundle .sf-card-cover { flex: none; max-width: 100%; margin-bottom: 1.1rem; }
+}
+.sf-cta {
+  display: inline-block;
+  background: var(--brand);
+  color: #fff !important;
+  text-decoration: none;
+  font-weight: 600;
+  padding: 0.7rem 1.2rem;
+  border-radius: 8px;
+  text-align: center;
+}
+.sf-cta:hover { background: #0a3e6b; text-decoration: none; }
+
+/* ---------- buy / how-to-buy note ---------- */
+.sf-buy-note {
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--accent);
+  background: #fdf6f1;
+  border-radius: 0 8px 8px 0;
+  padding: 1rem 1.15rem;
+  margin-top: 2.2rem;
+  font-size: 0.97rem;
+}
+.sf-buy-note h3 { margin: 0 0 0.4rem; font-size: 1rem; color: var(--accent); }
+.sf-buy-note p { margin: 0.35rem 0; }
+.sf-buy-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-top: 0.9rem;
+}
+.sf-buy-row .sf-cta { flex: 1 1 auto; min-width: 180px; }
+/* "Need both letters?" cross-link — consumer-letter pages only */
+.sf-bundle-link { font-size: 0.95rem; }
+.sf-bundle-link a { font-weight: 600; }
+/* ---------- preview gallery ---------- */
+.sf-gallery-note { color: var(--muted); font-size: 0.93rem; margin-bottom: 0.8rem; }
+.sf-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+}
+.sf-gallery img {
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  display: block;
+}
+
+/* ---------- what this is / is not ---------- */
+.sf-two-col {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+  margin-top: 0.5rem;
+}
+.sf-two-col h3 { font-size: 1.08rem; margin-bottom: 0.5rem; }
+
+/* ---------- faq ---------- */
+.sf-faq details {
+  border: 1px solid var(--line);
+  background: var(--card);
+  border-radius: 8px;
+  padding: 0.9rem 1rem;
+  margin-bottom: 0.7rem;
+}
+.sf-faq summary { font-weight: 600; cursor: pointer; color: var(--ink); }
+.sf-faq details p { margin: 0.6rem 0 0; }
+
+/* ---------- footer ---------- */
+.sf-footer {
+  background: var(--ink);
+  color: #c7d2df;
+  font-size: 0.88rem;
+  margin-top: 2.5rem;
+}
+.sf-footer .sf-wrap { padding-top: 1.6rem; padding-bottom: 1.6rem; }
+.sf-footer a { color: #9fc1e4; }
+.sf-footer .sf-fine { color: #8d9bad; line-height: 1.55; margin-top: 0.8rem; }
+.sf-footer p { margin: 0.35rem 0; }
+
+@media (max-width: 640px) {
+  .sf-header-inner { flex-direction: column; align-items: flex-start; }
+  .sf-page-head h1 { font-size: 1.6rem; }
+  .sf-nav { gap: 0.7rem; }
+}
+/* ---------- guide / content pages ---------- */
+/* The guide pages carry their own "general information, not legal advice"
+   notice as a styled blockquote at the top of the body. */
+.sf-guide .sf-page-head { margin-bottom: 0; }
+.sf-guide .sf-block p + p { margin-top: 0.75rem; }
+.sf-guide .sf-block p + ul,
+.sf-guide .sf-block p + ol { margin-top: 0.7rem; }
+.sf-guide .sf-block ul { list-style: disc; }
+.sf-guide .sf-block ol { list-style: decimal; }
+.sf-guide .sf-block li > strong { color: var(--ink); }
+.sf-guide-note {
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--brand);
+  background: var(--brand-soft);
+  border-radius: 0 8px 8px 0;
+  padding: 1rem 1.15rem;
+  margin: 0;
+  font-size: 0.97rem;
+  line-height: 1.65;
+}
+.sf-guide-note strong { color: var(--brand); }
+.sf-guide-cta-row { margin-top: 1.2rem; }
+/* "Not sure if this is the right document?" line on the product pages. */
+.sf-guide-link {
+  margin-top: 0.9rem;
+  font-size: 0.97rem;
+  color: var(--muted);
+}
+/* ---------- footer guides block ---------- */
+.sf-footer-guides { margin-top: 1.2rem; }
+.sf-footer-guides h4 {
+  margin: 0 0 0.4rem;
+  font-size: 0.95rem;
+  color: #fff;
+}
+.sf-footer-guides ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.2rem;
+}
+.sf-footer-guides li { margin: 0; font-size: 0.86rem; }
+
+/* ---------- /consumer-letters-bundle ---------- */
+/* Single 1600x2000 cover image: cap the width so it reads as a cover, not a banner. */
+.sf-bundle-cover { max-width: 420px; }
+.sf-bundle-cover img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+/* The approved disclosure block is rendered one paragraph per source line,
+   so its bytes reach the page unchanged. */
+.sf-disclosure { border-top: 1px solid var(--line); padding-top: 1rem; }
+.sf-disclosure .sf-disc-head {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--brand);
+  margin: 1rem 0 0.3rem;
+}
+.sf-disclosure .sf-disc-head:first-of-type { margin-top: 0; }
+.sf-disclosure .sf-disc-bullet {
+  margin: 0 0 0.4rem;
+  padding-left: 1rem;
+  text-indent: -1rem;
+}
+.sf-disclosure .sf-disc-line { margin: 0.5rem 0; }
+/* Blank line from the source file: an empty spacer, no text. */
+.sf-disclosure .sf-disc-gap { margin: 0; height: 0.7rem; }
+
+/* ---------- /thank-you + email signup ---------- */
+.sf-downloads {
+  list-style: none;
+  margin: 0.4rem 0 1rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+.sf-downloads li { margin: 0; }
+.sf-download { display: inline-block; min-width: 170px; text-align: center; }
+.sf-download-label { font-size: 0.92rem; color: var(--muted, #4a5867); }
+
+.sf-signup {
+  margin: 2rem 0 1rem;
+  padding: 1.1rem 1.2rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f7f9fb;
+}
+.sf-signup h3 { margin: 0 0 0.35rem; }
+.sf-signup p { margin: 0 0 0.8rem; font-size: 0.94rem; }
+.sf-signup-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.7rem;
+  align-items: center;
+}
+.sf-signup-form label {
+  flex: 1 1 100%;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+.sf-signup-form input {
+  flex: 1 1 240px;
+  min-width: 0;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font: inherit;
+  background: #fff;
+}
+.sf-signup-form button { flex: 0 0 auto; }
+.sf-signup-form button:disabled { opacity: 0.65; cursor: default; }
+.sf-signup-ok { color: #1c6b3a; font-weight: 600; margin: 0.7rem 0 0; }
+.sf-signup-error { color: #9a2b2b; font-weight: 600; margin: 0.7rem 0 0; }
